@@ -90,7 +90,7 @@ class ITRS90sw:
     90 nm switch
     """
     tech_name = 'ITRS 90 nm'
-    dev_name = 'ITRS 90 nm NMOS native transistor';
+    dev_name = 'ITRS 90 nm NMOS native transistor'
     area = 1e-6 * 90e-9 / .4
     conductance = 1.11e-3
     gate_rating = 1.25
@@ -104,7 +104,7 @@ class ITRS65sw:
     65 nm switch
     """
     tech_name = 'ITRS 65 nm'
-    dev_name = 'ITRS 65 nm NMOS native transistor';
+    dev_name = 'ITRS 65 nm NMOS native transistor'
     area = 1e-6 * 65e-9 / .35
     conductance = 1.3e-3
     gate_rating = 1.25
@@ -118,7 +118,7 @@ class ITRS45sw:
     45 nm switch
     """
     tech_name = 'ITRS 45 nm'
-    dev_name = 'ITRS 45 nm NMOS native transistor';
+    dev_name = 'ITRS 45 nm NMOS native transistor'
     area = 1e-6 * 45e-9 / .35
     conductance = 1.51e-3
     gate_rating = 1.25
@@ -132,7 +132,7 @@ class ITRS32sw:
     32 nm switch
     """
     tech_name = 'ITRS 32 nm'
-    dev_name = 'ITRS 32 nm NMOS native transistor';
+    dev_name = 'ITRS 32 nm NMOS native transistor'
     area = 1e-6 * 32e-9 / .35
     conductance = 1.82e-3
     gate_rating = 1.25
@@ -146,7 +146,7 @@ class ITRS22sw:
     22 nm switch
     """
     tech_name = 'ITRS 22 nm'
-    dev_name = 'ITRS 22 nm NMOS native transistor';
+    dev_name = 'ITRS 22 nm NMOS native transistor'
     area = 1e-6 * 22e-9 / .3
     conductance = 2.245e-3
     gate_rating = 1.25
@@ -161,7 +161,7 @@ class ITRS16sw:
     16 nm switch
     """
     tech_name = 'ITRS 16 nm'
-    dev_name = 'ITRS 16 nm NMOS native transistor';
+    dev_name = 'ITRS 16 nm NMOS native transistor'
     area = 1e-6 * 16e-9 / .3
     conductance = 2.535e-3
     gate_rating = 1.25
