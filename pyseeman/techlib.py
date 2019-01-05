@@ -24,7 +24,16 @@ class ITRS65cap:
     rating = 1.2
 
 class ITRS45cap:
-    pass
+    """
+    45 nm Oxide Capacitors
+    """
+    tech_name = 'ITRS 45nm'
+    dev_name = 'ITRS 45nm Oxide Capacitor'
+    capacitance = (40 ** 2) * .84e-15 * .5 / .045
+    area = 40e-6 * 40e-6
+    bottom_cap = 135.3e-15
+    esr = 0
+    rating = 1.2
 
 class ITRS32cap:
     pass
