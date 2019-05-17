@@ -1,5 +1,16 @@
 import numpy as np
 
+class Implementation:
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __repr__(self):
+        my_string = ""
+        for k, v in self.__dict__.items():
+            my_string += f"{k} = {v}\n"
+        return my_string
+
 def implement_topology(topology, Vin, switchTechs, capTechs, compMetric=1):
     """
     implement_topology: matches components with switches and components in
@@ -106,16 +117,30 @@ def implement_topology(topology, Vin, switchTechs, capTechs, compMetric=1):
 
     # Scale Switches for unit area:
     sw_area = 0
-    print(switch_rel_size)
+    #print(switch_rel_size)
     for i in range(ar.shape[0]):
-        print(i)
+     #   print(i)
         sw_area = sw_area + switch_rel_size[i]*switch_assign[i].area
-    #switch_size = (switch_rel_size*(sw_area > 0))/(sw_area+(sw_area == 0))
+
+    #if sw_area > 0:
+    #print(sw_area)
+    switch_size = switch_rel_size / sw_area
+
+
+    # Create implementation structure
+    implementation = Implementation()
+    implementation.topology = topology
+    implementation.capacitors = cap_assign
+    implementation.switches = switch_assign
+    implementation.cap_size = cap_size
+    implementation.switch_size = switch_size
+
+    return implementation
 
 if __name__ == '__main__':
     from pyseeman.generate_topology import generate_topology
     from pyseeman.techlib import ITRS16cap, ITRS16sw
     topo = generate_topology("series-parallel", 1, 3)
 
-
-    implement_topology(topo, Vin=2, switchTechs=[ITRS16sw], capTechs=[ITRS16cap], compMetric=1)
+    implementation = implement_topology(topo, Vin=1, switchTechs=[ITRS16sw], capTechs=[ITRS16cap], compMetric=1)
+    print(implementation)
