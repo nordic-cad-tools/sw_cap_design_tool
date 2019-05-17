@@ -40,7 +40,6 @@ def implement_topology(topology, Vin, switchTechs, capTechs, compMetric=1):
 
     # Assign Capacitors
     for i in range(ac.shape[0]):
-        print(i)
         Mc = 0
         Cc = 0 # cap cost
         for j, cap_tech in enumerate(capTechs):
@@ -108,7 +107,7 @@ def implement_topology(topology, Vin, switchTechs, capTechs, compMetric=1):
 
     # Scale Caps for unit area:
 
-    cap_area = 0;
+    cap_area = 0
     for i in range(ac.shape[0]):
         cap_area = cap_area + cap_rel_size[i]*cap_assign[i].area
 
@@ -126,6 +125,9 @@ def implement_topology(topology, Vin, switchTechs, capTechs, compMetric=1):
     #print(sw_area)
     switch_size = switch_rel_size / sw_area
 
+    print("______")
+    print(switch_rel_size)
+    print(sw_area)
 
     # Create implementation structure
     implementation = Implementation()
@@ -143,4 +145,4 @@ if __name__ == '__main__':
     topo = generate_topology("series-parallel", 1, 3)
 
     implementation = implement_topology(topo, Vin=1, switchTechs=[ITRS16sw], capTechs=[ITRS16cap], compMetric=1)
-    print(implementation)
+    #print(implementation)
