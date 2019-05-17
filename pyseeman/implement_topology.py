@@ -28,12 +28,12 @@ def implement_topology(topology, Vin, switchTechs, capTechs, compMetric=1):
     cap_rel_size = []
 
     # Assign Capacitors
-    for i in range(ac.shape[1]):
+    for i in range(ac.shape[0]):
         print(i)
         Mc = 0
         Cc = 0 # cap cost
         for j, cap_tech in enumerate(capTechs):
-            if vc[i] <= cap_tech:
+            if vc[i] <= cap_tech.rating:
                 # Cap could work ... let's see if it's good
                 # Use area-limited metric, which is usually applicable
                 C = cap_tech.area
@@ -58,7 +58,7 @@ def implement_topology(topology, Vin, switchTechs, capTechs, compMetric=1):
 
 
     # Assign Switches
-    for i in range(ar.shape[1]):
+    for i in range(ar.shape[0]):
         Msw = 0
         Csw = 0  # switch cost;
         for j, switch_tech in enumerate(switchTechs):
@@ -70,8 +70,8 @@ def implement_topology(topology, Vin, switchTechs, capTechs, compMetric=1):
                         switch_tech.body_cap * vrb[i] ** 2
         M = switch_tech.conductance * vr[i] ** 2 / C
     else: #  area metric
-        C = switchTechs(j).area
-        M = switchTechs(j).conductance * vr(i) ^ 2 / C
+        C = switch_tech.area
+        M = switch_tech.conductance * vr[i] ** 2 / C
 
     if M > Msw:
         if Msw == 0:
@@ -90,10 +90,17 @@ def implement_topology(topology, Vin, switchTechs, capTechs, compMetric=1):
         switch_rel_size.append(0)
     else:
         if compMetric == 2:
-            switch_rel_size.append(ar[i]*vr[i]) / (np.sqrt(Msw)*switch_assign[i].conductance)
+            switch_rel_size.append(ar[i]*vr[i] / (np.sqrt(Msw)*switch_assign[i].conductance))
         else:
-            switch_rel_size.append(ar[i]*vr[i]) / (np.sqrt(Msw)*switch_assign[i].area)
+            toto = ar[i]*vr[i]
+            foo = np.sqrt(Msw) * switch_assign[i].area
+            #switch_rel_size.append(ar[i]*vr[i] / (np.sqrt(Msw)*switch_assign[i].area))
 
 
 if __name__ == '__main__':
-    pass
+    from pyseeman.generate_topology import generate_topology
+    from pyseeman.techlib import ITRS16cap, ITRS16sw
+    topo = generate_topology("series-parallel", 1, 3)
+
+
+    implement_topology(topo, Vin=2, switchTechs=[ITRS16sw], capTechs=[ITRS16cap], compMetric=1)
