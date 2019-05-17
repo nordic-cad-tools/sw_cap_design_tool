@@ -52,9 +52,9 @@ def generate_topology(*args):
         vc = np.ones(m*(n-m)//m)
         vcb = []
 
-        for i in range(1, m):
-            for j in range(1, n-m+1):
-                vcb.append((i+j)/m)
+        for i in range(1, m + 1):
+            for j in range(1, n - m + 2):
+                vcb.append((i+j-1)/m)
 
         # FSL values
         vr = []
@@ -72,7 +72,7 @@ def generate_topology(*args):
                     vr.append(1/m)
                     vrb.append((i+j-1)/m)
         for i in range(1,m+2):
-            for j in range(n-m+1):
+            for j in range(1, n-m+1):
                 if i == 1:
                     vr.append(j/m)
                 elif i == m+1:
@@ -117,5 +117,6 @@ def generate_topology(*args):
 
 if __name__ == "__main__":
     res1 = generate_topology("series-parallel",1,3)
+    print(res1)
         #return result
 
