@@ -53,7 +53,7 @@ def generate_topology(*args):
         vcb = []
 
         for i in range(1, m + 1):
-            for j in range(1, n - m + 2):
+            for j in range(1, n - m + 1):
                 vcb.append((i+j-1)/m)
 
         # FSL values
