@@ -1,3 +1,5 @@
+import numpy as np
+
 def implement_topology(topology, Vin, switchTechs, capTechs, compMetric=1):
     """
     implement_topology: matches components with switches and components in
@@ -31,14 +33,14 @@ def implement_topology(topology, Vin, switchTechs, capTechs, compMetric=1):
         Mc = 0
         Cc = 0 # cap cost
         for j, cap_tech in enumerate(capTechs):
-            if vc(i) <= cap_tech:
+            if vc[i] <= cap_tech:
                 # Cap could work ... let's see if it's good
                 # Use area-limited metric, which is usually applicable
                 C = cap_tech.area
-                M = cap_tech.capacitance*vc(i)**2 / C
-                if (M > Mc):
-                    if (Mc == 0):
-                        cap_assign = [cap_assign, cap_tech]
+                M = cap_tech.capacitance*vc[i]**2 / C
+                if M > Mc:
+                    if Mc == 0:
+                        cap_assign.append(cap_tech)
                     else:
                         cap_assign.append(cap_tech)
 
@@ -48,6 +50,11 @@ def implement_topology(topology, Vin, switchTechs, capTechs, compMetric=1):
         if Mc == 0:
             raise ValueError("No capacitors meet the voltage requirement of: {}".format(vc(i)))
 
+        # determine relative device size
+        if ac[i] == 0:
+            cap_rel_size = cap_rel_size.append(0) # avoid divide by 0
+        else:
+            cap_rel_size.append((ac(i)*vc(i)) / (np.sqrt(Mc)*cap_assign[i].area))
 
 if __name__ == '__main__':
     pass
