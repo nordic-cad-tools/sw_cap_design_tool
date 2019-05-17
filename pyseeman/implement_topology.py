@@ -59,6 +59,7 @@ def implement_topology(topology, Vin, switchTechs, capTechs, compMetric=1):
 
     # Assign Switches
     for i in range(ar.shape[0]):
+        print(i)
         Msw = 0
         Csw = 0  # switch cost;
         for j, switch_tech in enumerate(switchTechs):
@@ -68,18 +69,18 @@ def implement_topology(topology, Vin, switchTechs, capTechs, compMetric=1):
                     # assume full gate drive
                     C = switch_tech.gate_cap * switch_tech.gate_rating ** 2 + switch_tech.drain_cap * vr[i] ** 2 + \
                         switch_tech.body_cap * vrb[i] ** 2
-        M = switch_tech.conductance * vr[i] ** 2 / C
-    else: #  area metric
-        C = switch_tech.area
-        M = switch_tech.conductance * vr[i] ** 2 / C
+                    M = switch_tech.conductance * vr[i] ** 2 / C
+                else: #  area metric
+                    C = switch_tech.area
+                    M = switch_tech.conductance * vr[i] ** 2 / C
 
-    if M > Msw:
-        if Msw == 0:
-            switch_assign.append(switch_tech)
-    else:
-        switch_assign[i] = switch_tech
-    Msw = M
-    Csw = C
+            if M > Msw:
+                if Msw == 0:
+                    switch_assign.append(switch_tech)
+                else:
+                    switch_assign[i] = switch_tech
+                Msw = M
+                Csw = C
 
     # check to make sure a suitable device exists
     if Msw == 0:
@@ -92,9 +93,8 @@ def implement_topology(topology, Vin, switchTechs, capTechs, compMetric=1):
         if compMetric == 2:
             switch_rel_size.append(ar[i]*vr[i] / (np.sqrt(Msw)*switch_assign[i].conductance))
         else:
-            toto = ar[i]*vr[i]
-            foo = np.sqrt(Msw) * switch_assign[i].area
-            #switch_rel_size.append(ar[i]*vr[i] / (np.sqrt(Msw)*switch_assign[i].area))
+            switch_rel_size.append(ar[i]*vr[i] / (np.sqrt(Msw)*switch_assign[i].area))
+
 
 
 if __name__ == '__main__':
