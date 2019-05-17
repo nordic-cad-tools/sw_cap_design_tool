@@ -44,6 +44,9 @@ def implement_topology(topology, Vin, switchTechs, capTechs, compMetric=1):
 
                     Mc = M
                     Cc = C
+        # check to make sure a suitable device exists
+        if Mc == 0:
+            raise ValueError("No capacitors meet the voltage requirement of: {}".format(vc(i)))
 
 
 if __name__ == '__main__':
