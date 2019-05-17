@@ -1,5 +1,16 @@
 import numpy as np
 
+class Topology:
+    #def __init__(self, ac=None):
+    #    self.ac = ac
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __repr__(self):
+        my_string = ""
+        for k, v in self.__dict__.items():
+            my_string += f"{k} = {v}\n"
+        return my_string
 
 def generate_topology(*args):
     """
@@ -9,6 +20,8 @@ def generate_topology(*args):
     """
     if args is None or len(args) < 2:
         raise ValueError("generate_topology() takes at least two arguments")
+    elif(len(args) > 3):
+        raise ValueError("generate_topology() takes at most three arguments")
     else:
         topology_name = args[0]
 
@@ -22,19 +35,19 @@ def generate_topology(*args):
         num = args[1]
         den = args[2]
 
+    # If input ratio is step-down, flip to step up for ac computation
+    # and then flip it again before returning result.
     flip = 0
     if num/den < 1:
-        # t = den
-        # den = num
-        # num = t
-        # flip = 1
+        flip = 1
         den, num = num, den
-
-    if topology_name.lower() is 'series-parallel':
+    #*************************** SERIES - PARALLEL *******************************#
+    if topology_name.lower() == 'series-parallel':
         n = num
         m = den
         N = n
 
+        # SSL values
         ac = np.ones(m*(n-m)//m)
         vc = np.ones(m*(n-m)//m)
         vcb = []
@@ -43,15 +56,66 @@ def generate_topology(*args):
             for j in range(1, n-m+1):
                 vcb.append((i+j)/m)
 
+        # FSL values
         vr = []
         vrb = []
 
-        for i in range(1, m):
-            for j in range(1, n-m+1):
-                vr.append(i/m)
-                vrb.append((i+j-1)/m)
+        for i in range(1, m + 1):
+            for j in range(1, n - m + 2):
+                if j == 1:
+                    vr.append(i/m)
+                    vrb.append((i + j - 1)/m)
+                elif j == n - m + 1:
+                    vr.append((n-m-1+i)/m)
+                    vrb.append((i+j-2)/m)
+                else:
+                    vr.append(1/m)
+                    vrb.append((i+j-1)/m)
+        for i in range(1,m+2):
+            for j in range(n-m+1):
+                if i == 1:
+                    vr.append(j/m)
+                elif i == m+1:
+                    vr.append((m-1+j)/m)
+                else:
+                    vr.append(1/m)
+                if i == 1 or i == m+1:
+                    vrb.append(0)
+                else:
+                    vrb.append((i+j-2)/m)
+        ar = np.ones(len(vr))/m
 
+    else:
+        raise ValueError("Topology type not implemented yet")
 
-    return 0
-    #return result
+    ratio = num/den
+    Mssl = 2*ratio**2/np.sum(ac*vc)**2
+    Mfsl = ratio**2/(2*np.sum(ar*vr)**2)
+
+    if flip == 1:
+        ac = np.array(ac)/ratio
+        vc = np.array(vc)/ratio
+        vcb = np.array(vcb)/ratio
+        ar = np.array(ar)/ratio
+        vr = np.array(vr)/ratio
+        vrb = np.array(vcb)/ratio
+        ratio = 1/ratio
+
+    result =  Topology()
+    result.topName = topology_name
+    result.ac = ac
+    result.vc = vc
+    result.vcb = vcb
+    result.ar = ar
+    result.vr = vr
+    result.vrb = vrb
+    result.Mssl = Mssl
+    result.Mfsl = Mfsl
+    result.ratio = ratio
+
+    return result
+
+if __name__ == "__main__":
+    res1 = generate_topology("series-parallel",1,3)
+        #return result
 
