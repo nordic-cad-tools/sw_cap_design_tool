@@ -59,7 +59,7 @@ def implement_topology(topology, Vin, switchTechs, capTechs, compMetric=1):
 
     # Assign Switches
     for i in range(ar.shape[0]):
-        print(i)
+
         Msw = 0
         Csw = 0  # switch cost;
         for j, switch_tech in enumerate(switchTechs):
@@ -82,20 +82,35 @@ def implement_topology(topology, Vin, switchTechs, capTechs, compMetric=1):
                 Msw = M
                 Csw = C
 
-    # check to make sure a suitable device exists
-    if Msw == 0:
-        raise ValueError("No switches meet the voltage requirement of: {}".format(vr[i]))
+        # check to make sure a suitable device exists
+        if Msw == 0:
+            raise ValueError("No switches meet the voltage requirement of: {}".format(vr[i]))
 
-    # determine relative device size
-    if ar[i] == 0:
-        switch_rel_size.append(0)
-    else:
-        if compMetric == 2:
-            switch_rel_size.append(ar[i]*vr[i] / (np.sqrt(Msw)*switch_assign[i].conductance))
+        # determine relative device size
+        if ar[i] == 0:
+            switch_rel_size.append(0)
         else:
-            switch_rel_size.append(ar[i]*vr[i] / (np.sqrt(Msw)*switch_assign[i].area))
+            if compMetric == 2:
+                switch_rel_size.append(ar[i]*vr[i] / (np.sqrt(Msw)*switch_assign[i].conductance))
+            else:
+                switch_rel_size.append(ar[i]*vr[i] / (np.sqrt(Msw)*switch_assign[i].area))
+
+    # Scale Caps for unit area:
+
+    cap_area = 0;
+    for i in range(ac.shape[0]):
+        cap_area = cap_area + cap_rel_size[i]*cap_assign[i].area
+
+    cap_size = cap_rel_size/(cap_area+1e-30)
 
 
+    # Scale Switches for unit area:
+    sw_area = 0
+    print(switch_rel_size)
+    for i in range(ar.shape[0]):
+        print(i)
+        sw_area = sw_area + switch_rel_size[i]*switch_assign[i].area
+    #switch_size = (switch_rel_size*(sw_area > 0))/(sw_area+(sw_area == 0))
 
 if __name__ == '__main__':
     from pyseeman.generate_topology import generate_topology
