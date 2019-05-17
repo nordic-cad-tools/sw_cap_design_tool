@@ -59,18 +59,22 @@ def generate_topology(*args):
         # FSL values
         vr = []
         vrb = []
-
+        print(f"n = {n}")
+        print(f"m = {m}")
         for i in range(1, m + 1):
             for j in range(1, n - m + 2):
                 if j == 1:
                     vr.append(i/m)
                     vrb.append((i + j - 1)/m)
+                    print("0")
                 elif j == n - m + 1:
                     vr.append((n-m-1+i)/m)
                     vrb.append((i+j-2)/m)
+                    print("1")
                 else:
                     vr.append(1/m)
                     vrb.append((i+j-1)/m)
+                    print("2")
         for i in range(1,m+2):
             for j in range(1, n-m+1):
                 if i == 1:
@@ -81,10 +85,12 @@ def generate_topology(*args):
                     vr.append(1/m)
                 if i == 1 or i == m+1:
                     vrb.append(0)
+                    print("3")
                 else:
                     vrb.append((i+j-2)/m)
+                    print("4)")
         ar = np.ones(len(vr))/m
-
+        print(vrb)
     else:
         raise ValueError("Topology type not implemented yet")
 
@@ -98,7 +104,7 @@ def generate_topology(*args):
         vcb = np.array(vcb)/ratio
         ar = np.array(ar)/ratio
         vr = np.array(vr)/ratio
-        vrb = np.array(vcb)/ratio
+        vrb = np.array(vrb)/ratio
         ratio = 1/ratio
 
     result =  Topology()
