@@ -11,7 +11,7 @@ services:
 before_install:
   - echo "before install..."
   - docker pull schickling/octave
-  - docker run --rm -it -v $(pwd):/source schickling/octave -h
+  - docker run --rm schickling/octave -h
   - docker ps -a
   
 addons:
