@@ -5,8 +5,14 @@ matrix:
     - os: linux
       sudo: true
 
+services:
+  - docker
+  
 before_install:
-  - sudo apt-get install flatpak
+  - echo "before install..."
+  - docker pull schickling/octave
+  - docker ps -a
+  
 addons:
   apt:
     update: true
