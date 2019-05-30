@@ -50,44 +50,44 @@ def generate_topology(*args):
         # SSL values
         ac = np.ones(m*(n-m)//m)
         vc = np.ones(m*(n-m)//m)
-        vcb = []
+        vcb = np.array([])
 
         for i in range(1, m + 1):
             for j in range(1, n - m + 1):
-                vcb.append((i+j-1)/m)
+                vcb = np.append(vcb,(i+j-1)/m)
 
         # FSL values
-        vr = []
-        vrb = []
+        vr = np.array([])
+        vrb = np.array([])
         print(f"n = {n}")
         print(f"m = {m}")
         for i in range(1, m + 1):
             for j in range(1, n - m + 2):
                 if j == 1:
-                    vr.append(i/m)
-                    vrb.append((i + j - 1)/m)
+                    vr = np.append(vr, i/m)
+                    vrb = np.append(vrb, (i + j - 1)/m)
                     print("0")
                 elif j == n - m + 1:
-                    vr.append((n-m-1+i)/m)
-                    vrb.append((i+j-2)/m)
+                    vr = np.append(vr, (n-m-1+i)/m)
+                    vrb = np.append(vrb, (i+j-2)/m)
                     print("1")
                 else:
-                    vr.append(1/m)
-                    vrb.append((i+j-1)/m)
+                    vr = np.append(vr, 1/m)
+                    vrb = np.append(vrb, (i+j-1)/m)
                     print("2")
         for i in range(1,m+2):
             for j in range(1, n-m+1):
                 if i == 1:
-                    vr.append(j/m)
+                    vr = np.append(vr, j/m)
                 elif i == m+1:
-                    vr.append((m-1+j)/m)
+                    vr = np.append(vr, (m-1+j)/m)
                 else:
-                    vr.append(1/m)
+                    vr = np.append(vr, 1/m)
                 if i == 1 or i == m+1:
-                    vrb.append(0)
+                    vrb = np.append(vrb, 0)
                     print("3")
                 else:
-                    vrb.append((i+j-2)/m)
+                    vrb = np.append(vrb, (i+j-2)/m)
                     print("4)")
         ar = np.ones(len(vr))/m
         print(vrb)
@@ -97,42 +97,41 @@ def generate_topology(*args):
         m = den
         N = n
 
-        ac = []
-        vc = []
-        vcb = []
+        ac = np.array([])
+        vc = np.array([])
+        vcb = np.array([])
 
         for j in range(1, n-m):
-            ac.extend([j, j])
-            vc.extend([1/m, 1/m])
-            vcb.append([1/m, 0])
+            ac = np.append(ac, [j, j])
+            vc = np.append(vc, [1/m, 1/m])
+            vcb = np.append(vcb, [1/m, 0])
 
-        ac.append(n-m)
-        vc.append(1/m)
-        vcb.append(1/m)
+        ac = np.append(ac, n-m)
+        vc = np.append(vc, 1/m)
+        vcb = np.append(vcb, 1/m)
 
         for j in range(m-1,0,-1):
-            ac.extend([np.ones(2)*j*(n/m-1)])
-            vc.extend([1/m, 1/m])
-            vcb.extend([1/m, 0])
+            ac = np.append(ac, np.ones(2)*j*(n/m-1))
+            vc = np.append(vc, [1/m, 1/m])
+            vcb = np.append(vcb, [1/m, 0])
 
         ar = np.hstack([np.ones(2*(n-m)), np.ones(2*m)*(n/m-1)])
         vr = np.ones(2*n)/m
         vrb = np.mod(np.linspace(0,(2*n-1),2*n),2)/m
-    elif topology_name.lower() == "Dickson":
-        raise ValueError('SWITCHCAP:nonIntegerRatio \nthe Dickson topology supports integer ratios only')
+    elif topology_name.lower() == "dickson":
 
         if den != 1:
-            raise ValueError("")
+            raise ValueError('SWITCHCAP:nonIntegerRatio the Dickson topology supports integer ratios only')
 
         N = num
 
         # SSL values
         ac = np.ones(N-1)
-        vc = []
+        vc = np.array([])
         vcb = np.ones(N-1)
 
         for j in range(1,N):
-            vc.append(j)
+            vc = np.append(vc, j)
 
         if N == 2:
             vr = np.ones(4)
@@ -146,12 +145,12 @@ def generate_topology(*args):
     else:
         raise ValueError("Topology type not implemented yet")
 
-    ac = np.array(ac)
-    vc = np.array(vc)
-    vcb = np.array(vcb)
-    ar = np.array(ar)
-    vr = np.array(vr)
-    vrb = np.array(vrb)
+    #ac = np.array(ac)
+    #vc = np.array(vc)
+    #vcb = np.array(vcb)
+    #ar = np.array(ar)
+    #vr = np.array(vr)
+    #vrb = np.array(vrb)
 
     # TODO: Check if it makes sense that M values are claulcated before the flipping
     ratio = num/den
@@ -190,6 +189,5 @@ if __name__ == "__main__":
     print(res2)
 
     res3 = generate_topology("Dickson",3,1)
-    print(res2)
-        #return resulet
+    print(res3)
 
