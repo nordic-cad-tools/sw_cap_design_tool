@@ -91,20 +91,80 @@ def generate_topology(*args):
                     print("4)")
         ar = np.ones(len(vr))/m
         print(vrb)
+
+    elif topology_name.lower() == 'ladder':
+        n = num
+        m = den
+        N = n
+
+        ac = []
+        vc = []
+        vcb = []
+
+        for j in range(1, n-m):
+            ac.extend([j, j])
+            vc.extend([1/m, 1/m])
+            vcb.append([1/m, 0])
+
+        ac.append(n-m)
+        vc.append(1/m)
+        vcb.append(1/m)
+
+        for j in range(m-1,0,-1):
+            ac.extend([np.ones(2)*j*(n/m-1)])
+            vc.extend([1/m, 1/m])
+            vcb.extend([1/m, 0])
+
+        ar = np.hstack([np.ones(2*(n-m)), np.ones(2*m)*(n/m-1)])
+        vr = np.ones(2*n)/m
+        vrb = np.mod(np.linspace(0,(2*n-1),2*n),2)/m
+    elif topology_name.lower() == "Dickson":
+        raise ValueError('SWITCHCAP:nonIntegerRatio \nthe Dickson topology supports integer ratios only')
+
+        if den != 1:
+            raise ValueError("")
+
+        N = num
+
+        # SSL values
+        ac = np.ones(N-1)
+        vc = []
+        vcb = np.ones(N-1)
+
+        for j in range(1,N):
+            vc.append(j)
+
+        if N == 2:
+            vr = np.ones(4)
+            ar = np.ones(4)
+            vrb = np.array([0,1,0,1])
+        else:
+            vr = np.hstack([np.ones(5),2*np.ones(N-2),2])
+            ar = np.hstack([np.ones(2)*np.floor((j+1)/2.), np.ones(2)*np.floor(j/2.), np.ones(N)])
+            vrb = np.hstack([np.array([0,1,0,1]),np.ones(N)])
+
     else:
         raise ValueError("Topology type not implemented yet")
 
+    ac = np.array(ac)
+    vc = np.array(vc)
+    vcb = np.array(vcb)
+    ar = np.array(ar)
+    vr = np.array(vr)
+    vrb = np.array(vrb)
+
+    # TODO: Check if it makes sense that M values are claulcated before the flipping
     ratio = num/den
     Mssl = 2*ratio**2/np.sum(ac*vc)**2
     Mfsl = ratio**2/(2*np.sum(ar*vr)**2)
 
     if flip == 1:
-        ac = np.array(ac)/ratio
-        vc = np.array(vc)/ratio
-        vcb = np.array(vcb)/ratio
-        ar = np.array(ar)/ratio
-        vr = np.array(vr)/ratio
-        vrb = np.array(vrb)/ratio
+        ac = ac/ratio
+        vc = vc/ratio
+        vcb = vcb/ratio
+        ar = ar/ratio
+        vr = vr/ratio
+        vrb = vrb/ratio
         ratio = 1/ratio
 
     result =  Topology()
@@ -122,7 +182,14 @@ def generate_topology(*args):
     return result
 
 if __name__ == "__main__":
-    res1 = generate_topology("series-parallel",1,3)
+    res1 = generate_topology("series-parallel",3,1)
     print(res1)
-        #return result
+
+    res2 = generate_topology("ladder",2,3)
+
+    print(res2)
+
+    res3 = generate_topology("Dickson",3,1)
+    print(res2)
+        #return resulet
 
