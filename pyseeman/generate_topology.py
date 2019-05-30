@@ -142,6 +142,60 @@ def generate_topology(*args):
             ar = np.hstack([np.ones(2)*np.floor((j+1)/2.), np.ones(2)*np.floor(j/2.), np.ones(N)])
             vrb = np.hstack([np.array([0,1,0,1]),np.ones(N)])
 
+    elif topology_name.lower() == "cockcroft-walton":
+
+        if den != 1:
+            raise ValueError('SWITCHCAP:nonIntegerRatio the Cockcroft-Walton topology supports integer ratios only')
+
+        N = num
+        # SSL values
+        ac = np.array([])
+        vc = np.hstack([1, np.ones(N-2)*2])
+        vcb = np.ones(N-1)
+
+        for j in range(1,N):
+            ac = np.append(np.floor((j+1)/2.), ac)
+
+        # FSL values
+        if N == 2:
+            vr = np.ones(4)
+            ar = np.ones(4)
+            vrb = np.array([0, 1, 0, 1])
+        else:
+            vr = np.hstack([np.ones(5), np.ones(N-2)*2, 1])
+            ar = np.hstack([np.floor((j+1)/2.)*np.ones(2), np.floor(j/2.)*np.ones(2), np.ones(N)])
+            vrb = np.hstack([np.array([0, 1, 0, 1]), np.ones(N)])
+
+    elif topology_name.lower() == "doubler":
+
+        if den != 1:
+            raise ValueError('SWITCHCAP:nonIntegerRatio the Doubler topology supports integer ratios only')
+
+        n = np.ceil(np.log2(num)).astype(np.int)
+        N = 2**n
+        if N != num:
+            raise ValueError('SWITCHCAP:badRatio the Doubler topology supports conversion ratios ~ 2^n')
+
+        # SSL values
+        ac = np.array([])
+        vc = np.array([])
+        vcb = np.array([])
+
+        for j in range(1,2*n):
+            ac = np.append(2**np.floor((j-1)/2.), ac)
+            vc = np.append(vc, 2**np.floor(j/2.))
+            vcb = np.append(vcb, 2**np.floor(j/2.)*np.mod(j,2))
+
+        # FSL values
+        ar = np.array([])
+        vr = np.array([])
+        vrb = np.array([])
+
+        for j in range(1,n+1) :
+            ar = np.append(ar, np.ones(4)*2**(j-1))
+            vr = np.append(vr, np.ones(4)*2**(n-j))
+            vrb = np.append(vrb, np.array([0, 1, 0, 1])*2**(n-j))
+
     else:
         raise ValueError("Topology type not implemented yet")
 
@@ -185,9 +239,13 @@ if __name__ == "__main__":
     print(res1)
 
     res2 = generate_topology("ladder",2,3)
-
     print(res2)
 
     res3 = generate_topology("Dickson",3,1)
     print(res3)
 
+    res4 = generate_topology("Cockcroft-walton",3,1)
+    print(res4)
+
+    res5 = generate_topology("Doubler",2,1)
+    print(res5)
