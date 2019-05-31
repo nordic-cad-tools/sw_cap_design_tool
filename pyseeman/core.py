@@ -29,6 +29,33 @@ class Topology:
         return f"<Topology(name={self.name}, ratio={self.ratio})>"
 
 
+class Implementation:
+
+    def __init__(self, topology, vin, switch_techs, cap_techs, comp_metric=1):
+        """
+        :param topology:  matches components with switches and components in the topology.
+        :param vin: input voltage of converter
+        :param switch_techs:  a list of technology structures available for switch use
+        :param cap_techs: a list of technology structures available for cap use
+        :param comp_metric: a metric (1=area, 2=loss) used for determining the best component (1=default)
+        """
+        self.topology = topology
+        self.vin = vin
+        self.switch_techs = switch_techs
+        self.cap_techs = cap_techs
+        self.comp_metric = comp_metric
+
+    def _implement(self):
+        switch_assign = []
+        cap_assign = []
+        switch_rel_size = []
+        cap_rel_size = []
+
+        self.capacitors = cap_assign
+        self.switches = switch_assign
+        self.cap_size = cap_size = None
+        self.switch_size = switch_size = None
+
 if __name__ == "__main__":
     topo = Topology("series-parallel", 1, 3)
     print(topo)
