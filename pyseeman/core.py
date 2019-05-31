@@ -59,6 +59,21 @@ class Implementation:
         self.cap_size = cap_size = None
         self.switch_size = switch_size = None
 
+    def evaluate_loss(self, vin, vout, iout, fsw, asw, ac):
+        """
+        Evaluate_loss: evaluates the loss and other peformance metrics for a
+        specific size and operating condition of a implemented SC converter
+
+        :param vin: converter input voltage for this calc [V]
+        :param vout: converter output voltage for this calc [V]
+        :param iout: converter output current for this calc [A]
+        :param fsw: switching frequency [Hz]
+        :param asw: switch area [m^2]
+        :param ac: capacitor area [m^2]
+        :return:
+        """
+        pass
+
 if __name__ == "__main__":
     topo = Topology("series-parallel", 1, 3)
     print(topo)
