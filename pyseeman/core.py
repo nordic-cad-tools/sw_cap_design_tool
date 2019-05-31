@@ -28,6 +28,15 @@ class Topology:
     def implement(self, vin, switch_techs, cap_techs, comp_metric=1):
         return Implementation(self, vin, switch_techs, cap_techs, comp_metric)
 
+    def permute(self, topology):
+        """
+        Returns a new topology consisting of every permutation of topologies. The specified topology will be cascaded
+        with the current topology.
+        :param topology:
+        :return:
+        """
+        pass
+
     def __repr__(self):
         return f"<Topology(name={self.name}, ratio={self.ratio})>"
 
