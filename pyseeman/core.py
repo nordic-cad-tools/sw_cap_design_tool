@@ -37,6 +37,9 @@ class Topology:
         """
         pass
 
+    def plot_opt_contour(self):
+        pass
+
     def __repr__(self):
         return f"<Topology(name={self.name}, ratio={self.ratio})>"
 
@@ -78,6 +81,16 @@ class Implementation:
         :param iout: converter output current for this calc [A]
         :param fsw: switching frequency [Hz]
         :param asw: switch area [m^2]
+        :param ac: capacitor area [m^2]
+        :return:
+        """
+        pass
+
+    def optimize_loss(self, vin, iout, ac):
+        """
+        Finds the optimal design point for given conditions
+        :param vin: converter input voltage for this calc [V]
+        :param iout: converter output current for this calc [A]
         :param ac: capacitor area [m^2]
         :return:
         """
