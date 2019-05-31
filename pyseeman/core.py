@@ -94,6 +94,9 @@ class Implementation:
 
     def plot_opt_contour(self):
         pass
+
 if __name__ == "__main__":
-    topo = Topology("series-parallel", 1, 3)
-    print(topo)
+    from pyseeman.techlib import ITRS16cap, ITRS16sw
+    my_topo = Topology("series-parallel", 1, 3)
+    my_imp = my_topo.implement(vin=2,  switch_techs=[ITRS16sw], cap_techs=[ITRS16cap], comp_metric=1)
+    my_imp.evaluate_loss(vout=0.6, iout=1, fsw=1e6, asw=1, ac=10)
