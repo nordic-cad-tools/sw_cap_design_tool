@@ -25,6 +25,9 @@ class Topology:
         self.Mfsl = 8
         self.ratio = 9
 
+    def implement(self, vin, switch_techs, cap_techs, comp_metric=1):
+        return Implementation(self, vin, switch_techs, cap_techs, comp_metric)
+
     def __repr__(self):
         return f"<Topology(name={self.name}, ratio={self.ratio})>"
 
