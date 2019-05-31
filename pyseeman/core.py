@@ -37,9 +37,6 @@ class Topology:
         """
         pass
 
-    def plot_opt_contour(self):
-        pass
-
     def __repr__(self):
         return f"<Topology(name={self.name}, ratio={self.ratio})>"
 
@@ -71,12 +68,11 @@ class Implementation:
         self.cap_size = cap_size = None
         self.switch_size = switch_size = None
 
-    def evaluate_loss(self, vin, vout, iout, fsw, asw, ac):
+    def evaluate_loss(self, vout, iout, fsw, asw, ac):
         """
         Evaluate_loss: evaluates the loss and other peformance metrics for a
         specific size and operating condition of a implemented SC converter
 
-        :param vin: converter input voltage for this calc [V]
         :param vout: converter output voltage for this calc [V]
         :param iout: converter output current for this calc [A]
         :param fsw: switching frequency [Hz]
@@ -86,16 +82,18 @@ class Implementation:
         """
         pass
 
-    def optimize_loss(self, vin, iout, ac):
+    def optimize_loss(self, iout, ac):
         """
         Finds the optimal design point for given conditions
-        :param vin: converter input voltage for this calc [V]
         :param iout: converter output current for this calc [A]
         :param ac: capacitor area [m^2]
         :return:
         """
         pass
 
+
+    def plot_opt_contour(self):
+        pass
 if __name__ == "__main__":
     topo = Topology("series-parallel", 1, 3)
     print(topo)
