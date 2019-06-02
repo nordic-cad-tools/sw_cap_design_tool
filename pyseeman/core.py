@@ -15,15 +15,78 @@ class Topology:
         self._generate_topology()
 
     def _generate_topology(self):
-        self.ac = 1
-        self.vc = 2
-        self.vcb = 3
-        self.ar = 4
-        self.vr = 5
-        self.vrb = 6
-        self.Mssl = 7
-        self.Mfsl = 8
-        self.ratio = 9
+        # If input ratio is step-down, flip to step up for ac computation
+        # and then flip it again before returning result.
+        flip = 0
+        if self.num / self.den < 1:
+            flip = 1
+            den, num = self.num, self.den
+        # *************************** SERIES - PARALLEL *******************************#
+        if self.name.lower() == 'series-parallel':
+            n = num
+            m = den
+            N = n
+
+            # SSL values
+            ac = np.ones(m * (n - m) // m)
+            vc = np.ones(m * (n - m) // m)
+            vcb = np.array([])
+
+            for i in range(1, m + 1):
+                for j in range(1, n - m + 1):
+                    vcb = np.append(vcb, (i + j - 1) / m)
+
+            # FSL values
+            vr = np.array([])
+            vrb = np.array([])
+            for i in range(1, m + 1):
+                for j in range(1, n - m + 2):
+                    if j == 1:
+                        vr = np.append(vr, i / m)
+                        vrb = np.append(vrb, (i + j - 1) / m)
+                    elif j == n - m + 1:
+                        vr = np.append(vr, (n - m - 1 + i) / m)
+                        vrb = np.append(vrb, (i + j - 2) / m)
+                    else:
+                        vr = np.append(vr, 1 / m)
+                        vrb = np.append(vrb, (i + j - 1) / m)
+            for i in range(1, m + 2):
+                for j in range(1, n - m + 1):
+                    if i == 1:
+                        vr = np.append(vr, j / m)
+                    elif i == m + 1:
+                        vr = np.append(vr, (m - 1 + j) / m)
+                    else:
+                        vr = np.append(vr, 1 / m)
+                    if i == 1 or i == m + 1:
+                        vrb = np.append(vrb, 0)
+                    else:
+                        vrb = np.append(vrb, (i + j - 2) / m)
+            ar = np.ones(len(vr)) / m
+
+        # TODO: Check if it makes sense that M values are claulcated before the flipping
+        ratio = num / den
+        Mssl = 2 * ratio ** 2 / np.sum(ac * vc) ** 2
+        Mfsl = ratio ** 2 / (2 * np.sum(ar * vr) ** 2)
+
+        if flip == 1:
+            ac = ac / ratio
+            vc = vc / ratio
+            vcb = vcb / ratio
+            ar = ar / ratio
+            vr = vr / ratio
+            vrb = vrb / ratio
+            ratio = 1 / ratio
+
+        self.ac = ac
+        self.vc = vc
+        self.vcb = vcb
+        self.ar = ar
+        self.vr = vr
+        self.vrb = vrb
+        self.Mssl = Mssl
+        self.Mfsl = Mfsl
+        self.ratio = ratio
 
     def implement(self, vin, switch_techs, cap_techs, comp_metric=1):
         return Implementation(self, vin, switch_techs, cap_techs, comp_metric)
@@ -98,5 +161,6 @@ class Implementation:
 if __name__ == "__main__":
     from pyseeman.techlib import ITRS16cap, ITRS16sw
     my_topo = Topology("series-parallel", 1, 3)
+    print(my_topo.__dict__)
     my_imp = my_topo.implement(vin=2,  switch_techs=[ITRS16sw], cap_techs=[ITRS16cap], comp_metric=1)
     my_imp.evaluate_loss(vout=0.6, iout=1, fsw=1e6, asw=1, ac=10)
