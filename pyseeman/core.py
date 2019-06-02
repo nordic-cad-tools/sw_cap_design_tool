@@ -1,5 +1,14 @@
 import numpy as np
 
+def fibfun(n):
+    if n<0:
+        raise ValueError("Invalid argument for fibfun")
+    elif n == 1:
+        return 0
+    elif n == 2:
+        return 1
+    else:
+        return fibfun(n-1) + fibfun(n-2)
 
 class Topology:
 
@@ -21,6 +30,9 @@ class Topology:
         if self.num / self.den < 1:
             flip = 1
             den, num = self.num, self.den
+        else:
+            num, den = self.num, self.den
+
         # *************************** SERIES - PARALLEL *******************************#
         if self.name.lower() == 'series-parallel':
             n = num
@@ -169,6 +181,41 @@ class Topology:
                 vr = np.append(vr, np.ones(4) * 2 ** (n - j))
                 vrb = np.append(vrb, np.array([0, 1, 0, 1]) * 2 ** (n - j))
 
+        elif self.name.lower() == "fibonacci":
+            if den != 1:
+                raise ValueError('SWITCHCAP:nonIntegerRatio the Fibonacci topology supports integer ratios only')
+
+            i = 2
+
+            while fibfun(i) < num:
+                i = i + 1
+
+            if fibfun(i) > num:
+                raise ValueError('SWITCHCAP:badRatio the fibonacci topology supports ratios of F_n or 1/F_n only')
+            N = fibfun(i)
+
+            ac = np.array([])
+            vc = np.array([])
+            vcb = np.array([])
+
+            for j in range(2, i):
+                ac = np.append(fibfun(j - 1), ac)
+                vc = np.append(vc, fibfun(j - 1))
+                vcb = np.append(vcb, fibfun(j - 1))
+
+            ar = np.array([1])
+            vr = np.array([])
+            vrb = np.array([0])
+
+            for j in range(2, i):
+                ar = np.append(np.array([fibfun(j), fibfun(j - 1), fibfun(j - 1)]), ar)
+                vr = np.append(vr, np.array([fibfun(j), fibfun(j), fibfun(j - 1)]))
+                vrb = np.append(vrb, np.array([fibfun(j - 1), 0, fibfun(j - 1)]))
+
+            vr = np.append(vr, fibfun(i - 1))
+        else:
+            raise ValueError("Topology type not implemented yet")
+
         # TODO: Check if it makes sense that M values are claulcated before the flipping
         ratio = num / den
         Mssl = 2 * ratio ** 2 / np.sum(ac * vc) ** 2
@@ -270,6 +317,7 @@ if __name__ == "__main__":
     my_topo = Topology("dickson", 1, 3)
     my_topo = Topology("cockcroft-walton", 1, 3)
     my_topo = Topology("doubler", 1, 2)
+    my_topo = Topology("fibonacci", 5, 1)
 
     print(my_topo.__dict__)
     my_imp = my_topo.implement(vin=2,  switch_techs=[ITRS16sw], cap_techs=[ITRS16cap], comp_metric=1)
