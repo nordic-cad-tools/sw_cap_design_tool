@@ -64,6 +64,32 @@ class Topology:
                         vrb = np.append(vrb, (i + j - 2) / m)
             ar = np.ones(len(vr)) / m
 
+        elif self.name.lower() == 'ladder':
+            n = num
+            m = den
+            N = n
+
+            ac = np.array([])
+            vc = np.array([])
+            vcb = np.array([])
+
+            for j in range(1, n - m):
+                ac = np.append(ac, [j, j])
+                vc = np.append(vc, [1 / m, 1 / m])
+                vcb = np.append(vcb, [1 / m, 0])
+
+            ac = np.append(ac, n - m)
+            vc = np.append(vc, 1 / m)
+            vcb = np.append(vcb, 1 / m)
+
+            for j in range(m - 1, 0, -1):
+                ac = np.append(ac, np.ones(2) * j * (n / m - 1))
+                vc = np.append(vc, [1 / m, 1 / m])
+                vcb = np.append(vcb, [1 / m, 0])
+
+            ar = np.hstack([np.ones(2 * (n - m)), np.ones(2 * m) * (n / m - 1)])
+            vr = np.ones(2 * n) / m
+            vrb = np.mod(np.linspace(0, (2 * n - 1), 2 * n), 2) / m
         # TODO: Check if it makes sense that M values are claulcated before the flipping
         ratio = num / den
         Mssl = 2 * ratio ** 2 / np.sum(ac * vc) ** 2
@@ -161,6 +187,7 @@ class Implementation:
 if __name__ == "__main__":
     from pyseeman.techlib import ITRS16cap, ITRS16sw
     my_topo = Topology("series-parallel", 1, 3)
+    my_topo = Topology("ladder", 2, 3)
     print(my_topo.__dict__)
     my_imp = my_topo.implement(vin=2,  switch_techs=[ITRS16sw], cap_techs=[ITRS16cap], comp_metric=1)
     my_imp.evaluate_loss(vout=0.6, iout=1, fsw=1e6, asw=1, ac=10)
