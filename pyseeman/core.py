@@ -139,6 +139,36 @@ class Topology:
                 ar = np.hstack([np.floor((j + 1) / 2.) * np.ones(2), np.floor(j / 2.) * np.ones(2), np.ones(N)])
                 vrb = np.hstack([np.array([0, 1, 0, 1]), np.ones(N)])
 
+        elif self.name.lower() == "doubler":
+
+            if den != 1:
+                raise ValueError('SWITCHCAP:nonIntegerRatio the Doubler topology supports integer ratios only')
+
+            n = np.ceil(np.log2(num)).astype(np.int)
+            N = 2 ** n
+            if N != num:
+                raise ValueError('SWITCHCAP:badRatio the Doubler topology supports conversion ratios ~ 2^n')
+
+            # SSL values
+            ac = np.array([])
+            vc = np.array([])
+            vcb = np.array([])
+
+            for j in range(1, 2 * n):
+                ac = np.append(2 ** np.floor((j - 1) / 2.), ac)
+                vc = np.append(vc, 2 ** np.floor(j / 2.))
+                vcb = np.append(vcb, 2 ** np.floor(j / 2.) * np.mod(j, 2))
+
+            # FSL values
+            ar = np.array([])
+            vr = np.array([])
+            vrb = np.array([])
+
+            for j in range(1, n + 1):
+                ar = np.append(ar, np.ones(4) * 2 ** (j - 1))
+                vr = np.append(vr, np.ones(4) * 2 ** (n - j))
+                vrb = np.append(vrb, np.array([0, 1, 0, 1]) * 2 ** (n - j))
+
         # TODO: Check if it makes sense that M values are claulcated before the flipping
         ratio = num / den
         Mssl = 2 * ratio ** 2 / np.sum(ac * vc) ** 2
@@ -239,6 +269,8 @@ if __name__ == "__main__":
     my_topo = Topology("ladder", 2, 3)
     my_topo = Topology("dickson", 1, 3)
     my_topo = Topology("cockcroft-walton", 1, 3)
+    my_topo = Topology("doubler", 1, 2)
+
     print(my_topo.__dict__)
     my_imp = my_topo.implement(vin=2,  switch_techs=[ITRS16sw], cap_techs=[ITRS16cap], comp_metric=1)
     my_imp.evaluate_loss(vout=0.6, iout=1, fsw=1e6, asw=1, ac=10)
