@@ -271,17 +271,114 @@ class Implementation:
         self.switch_techs = switch_techs
         self.cap_techs = cap_techs
         self.comp_metric = comp_metric
+        self._implement()
 
     def _implement(self):
+        # Break out components of topology structure
+        ratio = self.topology.ratio
+        ac = self.topology.ac
+        ar = self.topology.ar
+        vc = self.topology.vc * self.vin
+        vr = self.topology.vr * self.vin
+        vcb = self.topology.vcb * self.vin
+        vrb = self.topology.vrb * self.vin
+
         switch_assign = []
         cap_assign = []
         switch_rel_size = []
         cap_rel_size = []
 
+        # Assign Capacitors
+        for i in range(ac.shape[0]):
+            Mc = 0
+            Cc = 0  # cap cost
+            for j, cap_tech in enumerate(self.cap_techs):
+                if vc[i] <= cap_tech.rating:
+                    # Cap could work ... let's see if it's good
+                    # Use area-limited metric, which is usually applicable
+                    C = cap_tech.area
+                    M = cap_tech.capacitance * vc[i] ** 2 / C
+                    if M > Mc:
+                        if Mc == 0:
+                            cap_assign.append(cap_tech)
+                        else:
+                            cap_assign.append(cap_tech)
+
+                        Mc = M
+                        Cc = C
+            # check to make sure a suitable device exists
+            if Mc == 0:
+                raise ValueError("No capacitors meet the voltage requirement of: {}".format(vc[i]))
+
+            # determine relative device size
+            if ac[i] == 0:
+                cap_rel_size = cap_rel_size.append(0)  # avoid divide by 0
+            else:
+                cap_rel_size.append((ac[i] * vc[i]) / (np.sqrt(Mc) * cap_assign[i].area))
+
+        # Assign Switches
+        for i in range(ar.shape[0]):
+
+            Msw = 0
+            Csw = 0  # switch cost;
+            for j, switch_tech in enumerate(self.switch_techs):
+                if (vr[i] <= switch_tech.drain_rating):
+                    # Switch could work let's see if it's good
+                    if self.comp_metric == 2:  # loss metric
+                        # assume full gate drive
+                        C = switch_tech.gate_cap * switch_tech.gate_rating ** 2 + switch_tech.drain_cap * vr[
+                            i] ** 2 + \
+                            switch_tech.body_cap * vrb[i] ** 2
+                        M = switch_tech.conductance * vr[i] ** 2 / C
+                    else:  # area metric
+                        C = switch_tech.area
+                        M = switch_tech.conductance * vr[i] ** 2 / C
+
+                if M > Msw:
+                    if Msw == 0:
+                        switch_assign.append(switch_tech)
+                    else:
+                        switch_assign[i] = switch_tech
+                    Msw = M
+                    Csw = C
+
+            # check to make sure a suitable device exists
+            if Msw == 0:
+                raise ValueError("No switches meet the voltage requirement of: {}".format(vr[i]))
+
+            # determine relative device size
+            if ar[i] == 0:
+                switch_rel_size.append(0)
+            else:
+                if self.comp_metric == 2:
+                    switch_rel_size.append(ar[i] * vr[i] / (np.sqrt(Msw) * switch_assign[i].conductance))
+                else:
+                    switch_rel_size.append(ar[i] * vr[i] / (np.sqrt(Msw) * switch_assign[i].area))
+
+        # Scale Caps for unit area:
+
+        cap_area = 0
+        for i in range(ac.shape[0]):
+            cap_area = cap_area + cap_rel_size[i] * cap_assign[i].area
+
+        cap_size = cap_rel_size / (cap_area + 1e-30)
+
+        # Scale Switches for unit area:
+        sw_area = 0
+        # print(switch_rel_size)
+        for i in range(ar.shape[0]):
+            #   print(i)
+            sw_area = sw_area + switch_rel_size[i] * switch_assign[i].area
+
+        # if sw_area > 0:
+        # print(sw_area)
+        switch_size = switch_rel_size / sw_area
+
         self.capacitors = cap_assign
         self.switches = switch_assign
-        self.cap_size = cap_size = None
-        self.switch_size = switch_size = None
+        self.cap_size = cap_size
+        self.switch_size = switch_size
+
 
     def evaluate_loss(self, vout, iout, fsw, asw, ac):
         """
@@ -317,8 +414,9 @@ if __name__ == "__main__":
     my_topo = Topology("dickson", 1, 3)
     my_topo = Topology("cockcroft-walton", 1, 3)
     my_topo = Topology("doubler", 1, 2)
-    my_topo = Topology("fibonacci", 5, 1)
+    #my_topo = Topology("fibonacci", 5, 1)
 
     print(my_topo.__dict__)
-    my_imp = my_topo.implement(vin=2,  switch_techs=[ITRS16sw], cap_techs=[ITRS16cap], comp_metric=1)
-    my_imp.evaluate_loss(vout=0.6, iout=1, fsw=1e6, asw=1, ac=10)
+    my_imp = my_topo.implement(vin=1,  switch_techs=[ITRS16sw], cap_techs=[ITRS16cap], comp_metric=1)
+    print(my_imp.__dict__)
+    #my_imp.evaluate_loss(vout=0.6, iout=1, fsw=1e6, asw=1, ac=10)
