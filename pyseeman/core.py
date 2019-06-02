@@ -115,6 +115,30 @@ class Topology:
                 ar = np.hstack([np.ones(2) * np.floor((j + 1) / 2.), np.ones(2) * np.floor(j / 2.), np.ones(N)])
                 vrb = np.hstack([np.array([0, 1, 0, 1]), np.ones(N)])
 
+        elif self.name.lower() == "cockcroft-walton":
+
+            if den != 1:
+                raise ValueError('SWITCHCAP:nonIntegerRatio the Cockcroft-Walton topology supports integer ratios only')
+
+            N = num
+            # SSL values
+            ac = np.array([])
+            vc = np.hstack([1, np.ones(N - 2) * 2])
+            vcb = np.ones(N - 1)
+
+            for j in range(1, N):
+                ac = np.append(np.floor((j + 1) / 2.), ac)
+
+            # FSL values
+            if N == 2:
+                vr = np.ones(4)
+                ar = np.ones(4)
+                vrb = np.array([0, 1, 0, 1])
+            else:
+                vr = np.hstack([np.ones(5), np.ones(N - 2) * 2, 1])
+                ar = np.hstack([np.floor((j + 1) / 2.) * np.ones(2), np.floor(j / 2.) * np.ones(2), np.ones(N)])
+                vrb = np.hstack([np.array([0, 1, 0, 1]), np.ones(N)])
+
         # TODO: Check if it makes sense that M values are claulcated before the flipping
         ratio = num / den
         Mssl = 2 * ratio ** 2 / np.sum(ac * vc) ** 2
@@ -214,6 +238,7 @@ if __name__ == "__main__":
     my_topo = Topology("series-parallel", 1, 3)
     my_topo = Topology("ladder", 2, 3)
     my_topo = Topology("dickson", 1, 3)
+    my_topo = Topology("cockcroft-walton", 1, 3)
     print(my_topo.__dict__)
     my_imp = my_topo.implement(vin=2,  switch_techs=[ITRS16sw], cap_techs=[ITRS16cap], comp_metric=1)
     my_imp.evaluate_loss(vout=0.6, iout=1, fsw=1e6, asw=1, ac=10)
