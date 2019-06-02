@@ -12,6 +12,17 @@ class Topology:
             my_string += f"{k} = {v}\n"
         return my_string
 
+
+def fibfun(n):
+    if n<0:
+        raise ValueError("Invalid argument for fibfun")
+    elif n == 1:
+        return 0
+    elif n == 2:
+        return 1
+    else:
+        return fibfun(n-1) + fibfun(n-2)
+
 def generate_topology(*args):
     """
     Generates a topology based on a choice of type of topology along
@@ -59,22 +70,17 @@ def generate_topology(*args):
         # FSL values
         vr = np.array([])
         vrb = np.array([])
-        print(f"n = {n}")
-        print(f"m = {m}")
         for i in range(1, m + 1):
             for j in range(1, n - m + 2):
                 if j == 1:
                     vr = np.append(vr, i/m)
                     vrb = np.append(vrb, (i + j - 1)/m)
-                    print("0")
                 elif j == n - m + 1:
                     vr = np.append(vr, (n-m-1+i)/m)
                     vrb = np.append(vrb, (i+j-2)/m)
-                    print("1")
                 else:
                     vr = np.append(vr, 1/m)
                     vrb = np.append(vrb, (i+j-1)/m)
-                    print("2")
         for i in range(1,m+2):
             for j in range(1, n-m+1):
                 if i == 1:
@@ -85,12 +91,9 @@ def generate_topology(*args):
                     vr = np.append(vr, 1/m)
                 if i == 1 or i == m+1:
                     vrb = np.append(vrb, 0)
-                    print("3")
                 else:
                     vrb = np.append(vrb, (i+j-2)/m)
-                    print("4)")
         ar = np.ones(len(vr))/m
-        print(vrb)
 
     elif topology_name.lower() == 'ladder':
         n = num
@@ -196,6 +199,40 @@ def generate_topology(*args):
             vr = np.append(vr, np.ones(4)*2**(n-j))
             vrb = np.append(vrb, np.array([0, 1, 0, 1])*2**(n-j))
 
+    elif topology_name.lower() == "fibonacci":
+        if den != 1:
+            raise ValueError('SWITCHCAP:nonIntegerRatio the Fibonacci topology supports integer ratios only')
+
+        i = 2
+
+        while fibfun(i) < num:
+
+            i = i + 1
+
+        if fibfun(i) > num:
+            raise ValueError('SWITCHCAP:badRatio the fibonacci topology supports ratios of F_n or 1/F_n only')
+        N = fibfun(i)
+
+        ac = np.array([])
+        vc = np.array([])
+        vcb = np.array([])
+
+
+        for j in range(2,i):
+            ac = np.append(fibfun(j-1), ac)
+            vc = np.append(vc, fibfun(j-1))
+            vcb = np.append(vcb, fibfun(j-1))
+
+        ar = np.array([1])
+        vr = np.array([])
+        vrb = np.array([0])
+
+        for j in range(2,i):
+            ar = np.append(np.array([fibfun(j),fibfun(j-1),fibfun(j-1)]),ar)
+            vr = np.append(vr, np.array([fibfun(j),fibfun(j),fibfun(j-1)]))
+            vrb = np.append(vrb, np.array([fibfun(j-1),0,fibfun(j-1)]))
+
+        vr = np.append(vr, fibfun(i-1))
     else:
         raise ValueError("Topology type not implemented yet")
 
@@ -249,3 +286,6 @@ if __name__ == "__main__":
 
     res5 = generate_topology("Doubler",2,1)
     print(res5)
+
+    res6 = generate_topology("Fibonacci",5,1)
+    print(res6)
