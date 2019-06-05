@@ -398,6 +398,31 @@ class Implementation:
         :param ac: capacitor area [m^2]
         :return:
         """
+        Vin = np.asarray(Vin)
+        Vout = np.asarray(Vout)
+        Iout = np.asarray(Iout)
+        fsw = np.asarray(fsw)
+        Asw = np.asarray(Asw)
+        Ac = np.asarray(Ac)
+
+        if Vin.ndim == 0:
+            Vin = Vin[np.newaxis]
+
+        if Vout.ndim == 0:
+            Vout = Vout[np.newaxis]
+
+        if Iout.ndim == 0:
+            Iout = Iout[np.newaxis]
+
+        if fsw.ndim == 0:
+            fsw = fsw[np.newaxis]
+
+        if Asw.ndim == 0:
+            Asw = Asw[np.newaxis]
+
+        if Ac.ndim == 0:
+            Ac = Ac[np.newaxis]
+
 
         # Break out components of topology structure
         ratio = self.topology.ratio
@@ -417,9 +442,12 @@ class Implementation:
 
         # Vectorize inputs according to evaluation type
         eval_type = 0 # Initialize to invalid type
+
         # TODO: Implement parameter expansion
+
         paramdim = 1
         Vin = self._expand_input(Vin, paramdim)
+
         if len(Vout) == 0:
             eval_type = 1
             Vout = np.zeros(paramdim)
@@ -444,7 +472,7 @@ class Implementation:
         # Calculate SSL output resistance
         Rssl_alpha = 0
 
-        for i in range(caps.shape[2]):
+        for i in range(len(caps)):
             if ac[i] > 0:
                 Rssl_alpha += ac[i]**2/(caps[i].capacitance*cap_size[i])
 
@@ -452,7 +480,7 @@ class Implementation:
         # Calculate FSL output resistance
         Rfsl_alpha = 0
 
-        for i in range(switches.shape[2]):
+        for i in range(len(switches)):
             if ar[i] > 0:
                 Rfsl_alpha += 2*ar[i]**2/(switches[i].conductance*sw_size[i])
         Rfsl = Rfsl_alpha/Asw
@@ -461,15 +489,16 @@ class Implementation:
         # Calculate ESR loss
         Resr_alpha = 0
 
-        for i in range(caps.shape[2]):
+        for i in range(len(caps)):
             if ac[i] > 0:
                 Resr_alpha += 4*ac[i]**2*caps[i].esr/cap_size[i]
         Resr = Resr_alpha/Ac
-        Resr += self.esr
+        if hasattr(self, 'esr'):
+            Resr += self.esr
 
 
         # Calculate the unknown variable
-        if type == 1:
+        if eval_type == 1:
             # Vout is unknown
             Rssl = Rssl_alpha/(fsw*Ac)
 
@@ -478,7 +507,7 @@ class Implementation:
             Vout = Vin*ratio - Rout*Iout
             Pout = Vout*Iout
             is_prac = np.ones(paramdim)
-        elif type == 2:
+        elif eval_type == 2:
             # fsw is unknown
 #           # Calculate needed output resistance and switching frequency to match
             # output voltage
@@ -487,7 +516,7 @@ class Implementation:
             Rreq = (Vin*ratio - Vout)/Iout
             is_prac = ((Rreq > 0) and (Rfsl + Resr < Rreq))*1.0
             Rssl = np.real(np.sqrt(Rreq**2 - (Rfsl + Resr)**2))
-            fsw = Fssl_alphs/(Rssl*Ac)
+            fsw = Rssl_alpha/(Rssl*Ac)
 
             # Calculate total output resistance
             Rout = np.sqrt(Rssl**2 + (Rfsl + Resr)**2)
@@ -505,7 +534,7 @@ class Implementation:
 
         # Calculate cap related parasitic loss
         Pc_alpha = 0
-        for i in range(caps.shape[2]):
+        for i in range(len(caps)):
             Pc_alpha += caps[i].bottom_cap*cap_size[i]*vcb[i]**2
 
         Pc = Pc_alpha*fsw*Ac*Vin**2
@@ -514,10 +543,10 @@ class Implementation:
         # Calculate switch related parasitic loss
         Psw_alpha = 0
         Pg_alpha = 0
-        for i in range(switches.shape[2]):
+        for i in range(len(switches)):
             # Assume switch is driven at full gate_rating voltage
             Vgssw = switches[i].gate_rating
-            Pg_alpha += switches[i].gate_cap*Sw_size[i]*Vgssw**2
+            Pg_alpha += switches[i].gate_cap*sw_size[i]*Vgssw**2
             Psw_alpha += switches[i].drain_cap*sw_size[i]*vr[i]**2 + \
             switches[i].body_cap*sw_size[i]*vrb[i]**2
         Psw = (Psw_alpha*Vin**2 + Pg_alpha)*fsw*Asw
@@ -572,4 +601,7 @@ if __name__ == "__main__":
     print(my_topo.__dict__)
     my_imp = my_topo.implement(vin=1,  switch_techs=[ITRS16sw], cap_techs=[ITRS16cap], comp_metric=1)
     print(my_imp.__dict__)
+
+    performance = my_imp.evaluate_loss(3.7, 1.2, 10e-3, [], 1e-4, 1e-4)
+    print(performance)
     #my_imp.evaluate_loss(vout=0.6, iout=1, fsw=1e6, asw=1, ac=10)
