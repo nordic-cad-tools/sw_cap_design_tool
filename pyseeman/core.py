@@ -380,7 +380,13 @@ class Implementation:
         self.switch_size = switch_size
 
 
-    def evaluate_loss(self, vout, iout, fsw, asw, ac):
+    def _expand_input(self, input, paramdim):
+        # TODO: Finish this for cases with more dimensions
+        result = input
+        return result
+
+
+    def evaluate_loss(self, Vin, Vout, Iout, fsw, Asw, Ac):
         """
         Evaluate_loss: evaluates the loss and other peformance metrics for a
         specific size and operating condition of a implemented SC converter
@@ -392,7 +398,154 @@ class Implementation:
         :param ac: capacitor area [m^2]
         :return:
         """
-        pass
+
+        # Break out components of topology structure
+        ratio = self.topology.ratio
+        ac = self.topology.ac
+        ar = self.topology.ar
+        vc = self.topology.vc * self.vin
+        vr = self.topology.vr * self.vin
+        vcb = self.topology.vcb * self.vin
+        vrb = self.topology.vrb * self.vin
+
+        caps = self.capacitors
+        cap_size = self.cap_size
+        switches = self.switches
+        sw_size = self.switch_size
+
+        Vin = np.array(Vin)
+
+        # Vectorize inputs according to evaluation type
+        eval_type = 0 # Initialize to invalid type
+        # TODO: Implement parameter expansion
+        paramdim = 1
+        Vin = self._expand_input(Vin, paramdim)
+        if len(Vout) == 0:
+            eval_type = 1
+            Vout = np.zeros(paramdim)
+        else:
+            Vout = self._expand_input(Vout, paramdim)
+
+        Iout = self._expand_input(Iout, paramdim)
+
+        if len(fsw) == 0:
+            if eval_type == 1:
+                raise ValueError('Both fsw and Vout cannot be undefined')
+            else:
+                eval_type = 2
+                fsw = np.zeros(paramdim)
+        else:
+            fsw = self._expand_input(fsw, paramdim)
+
+        Asw = self._expand_input(Asw, paramdim)
+        Ac = self._expand_input(Ac, paramdim)
+
+        #********************** Start analysis ***********************#
+        # Calculate SSL output resistance
+        Rssl_alpha = 0
+
+        for i in range(caps.shape[2]):
+            if ac[i] > 0:
+                Rssl_alpha += ac[i]**2/(caps[i].capacitance*cap_size[i])
+
+
+        # Calculate FSL output resistance
+        Rfsl_alpha = 0
+
+        for i in range(switches.shape[2]):
+            if ar[i] > 0:
+                Rfsl_alpha += 2*ar[i]**2/(switches[i].conductance*sw_size[i])
+        Rfsl = Rfsl_alpha/Asw
+
+
+        # Calculate ESR loss
+        Resr_alpha = 0
+
+        for i in range(caps.shape[2]):
+            if ac[i] > 0:
+                Resr_alpha += 4*ac[i]**2*caps[i].esr/cap_size[i]
+        Resr = Resr_alpha/Ac
+        Resr += self.esr
+
+
+        # Calculate the unknown variable
+        if type == 1:
+            # Vout is unknown
+            Rssl = Rssl_alpha/(fsw*Ac)
+
+            # Calculate total output resistance
+            Rout = np.sqrt(Rssl**2 + (Rfsl + Resr)**2)
+            Vout = Vin*ratio - Rout*Iout
+            Pout = Vout*Iout
+            is_prac = np.ones(paramdim)
+        elif type == 2:
+            # fsw is unknown
+#           # Calculate needed output resistance and switching frequency to match
+            # output voltage
+            # is_prac is 1 if a finite fsw that satisfies Iout, Vin, Vout exists
+
+            Rreq = (Vin*ratio - Vout)/Iout
+            is_prac = ((Rreq > 0) and (Rfsl + Resr < Rreq))*1.0
+            Rssl = np.real(np.sqrt(Rreq**2 - (Rfsl + Resr)**2))
+            fsw = Fssl_alphs/(Rssl*Ac)
+
+            # Calculate total output resistance
+            Rout = np.sqrt(Rssl**2 + (Rfsl + Resr)**2)
+            Pout = Vout*Iout
+        else:
+            raise ValueError("Either Vout or fsw must be []")
+
+
+        # Calculate resistance losses
+        Pssl = Rssl*Iout**2
+        Pfsl = Rfsl*Iout**2
+        Pesr = Resr*Iout**2
+        Pres = Rout*Iout**2
+
+
+        # Calculate cap related parasitic loss
+        Pc_alpha = 0
+        for i in range(caps.shape[2]):
+            Pc_alpha += caps[i].bottom_cap*cap_size[i]*vcb[i]**2
+
+        Pc = Pc_alpha*fsw*Ac*Vin**2
+
+
+        # Calculate switch related parasitic loss
+        Psw_alpha = 0
+        Pg_alpha = 0
+        for i in range(switches.shape[2]):
+            # Assume switch is driven at full gate_rating voltage
+            Vgssw = switches[i].gate_rating
+            Pg_alpha += switches[i].gate_cap*Sw_size[i]*Vgssw**2
+            Psw_alpha += switches[i].drain_cap*sw_size[i]*vr[i]**2 + \
+            switches[i].body_cap*sw_size[i]*vrb[i]**2
+        Psw = (Psw_alpha*Vin**2 + Pg_alpha)*fsw*Asw
+
+        # Calculate total loss, efficiency, etc.
+        Ploss = Pres + Pc + Psw
+        eff = Pout/(Pout + Ploss)
+
+        # TODO: Implement dominant loss calculation
+        #IND = []
+        #
+        #for i in range(Pssl):
+        #
+        #
+
+        performance = {}
+
+        performance["Vout"] = Vout
+        performance["fsw"] = fsw
+        performance["is_possible"] = is_prac
+        performance["efficiency"] = eff
+        performance["total_loss"] = Ploss
+        performance["impedance"] = Rout
+        #performance["dominant_loss"] = IND
+        #performance["dominant_text"] = texts[IND]
+
+        return performance
+
 
     def optimize_loss(self, iout, ac):
         """
