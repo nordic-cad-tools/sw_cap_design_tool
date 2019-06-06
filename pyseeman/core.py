@@ -656,10 +656,25 @@ def plot_regulation(topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0
 
     if isinstance(Vin, (int, float)):
         if (mode == 2):
-            raise RuntimeError('Cannot sweep both Vin and Vout');
+            raise RuntimeError('Cannot sweep both Vin and Vout')
         mode = 1
         indim = len(Vout)
         xval = Vout
+
+    numtops = len(topologies)
+
+    EFF = np.zeros((numtops, indim))
+    ASW = []
+    pkeff = []
+    pkv = []
+    RATIO = []
+    FSW = []
+
+    Vin_nom = Vin
+
+    for t in topologies:
+        imp = t.implement(Vin_nom, switches, capacitors)
+        [opt_perf, fsw_opt, Asw_opt] = imp.optimize_loss(Iout, Ac)
 
 if __name__ == "__main__":
     from pyseeman.techlib import ITRS16cap, ITRS16sw
