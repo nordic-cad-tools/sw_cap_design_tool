@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.optimize import minimize
+import matplotlib.pyplot as plt
 
 def fibfun(n):
     if n<0:
@@ -632,6 +633,34 @@ class Implementation:
     def plot_opt_contour(self):
         pass
 
+
+def plot_regulation(topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0, idesign=0):
+    """
+
+    :param topologies: A matrix of topologies and ratios
+    :param Vin: Input voltage of converter (could be a vector)
+    :param Vout: Output voltage of converter (a vector if Vin is a scalar)
+    :param Iout: Matching vector of output currents [A]
+    :param Ac: Capacitor area constraint (in m^2).  fsw will be swept, Asw will be chosen automatically
+    :param switches: a row vector of switch technology structures
+    :param capacitors: a row vector of capacitor technology structures
+    :param esr: the output-referred constant esr of requisite metal (ie, bondwires).  Default = 0
+    :param idesign: a vector (size = number of topologies) containing the nominal design current for each topology
+    :return:
+    """
+    mode = 0  # 1 = Vout, 2 = Vin swept
+    if isinstance(Vout, (int, float)):
+        mode = 2
+        indim = len(Vin)
+        xval = Vin
+
+    if isinstance(Vin, (int, float)):
+        if (mode == 2):
+            raise RuntimeError('Cannot sweep both Vin and Vout');
+        mode = 1
+        indim = len(Vout)
+        xval = Vout
+
 if __name__ == "__main__":
     from pyseeman.techlib import ITRS16cap, ITRS16sw
     my_topo = Topology("series-parallel", 1, 3)
@@ -655,3 +684,9 @@ if __name__ == "__main__":
 
     # test optimization
     print(my_imp.optimize_loss(iout=1e-3, ac=1e-6))
+
+    topologies = [Topology("series-parallel", 1, 3),
+                  Topology("series-parallel", 1, 2),
+                  Topology("series-parallel", 2, 3)]
+    Vout = np.linspace(0, 1.2, 100)
+    plot_regulation(topologies, 1.2, Vout, 1e-3, 1e-4,[ITRS16sw], [ITRS16cap])
