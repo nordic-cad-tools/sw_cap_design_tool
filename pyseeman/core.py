@@ -381,10 +381,29 @@ class Implementation:
         self.switch_size = switch_size
 
 
-    def _expand_input(self, input, paramdim):
+    def _expand_input(self, input, maxsize):
         # TODO: Finish this for cases with more dimensions
-        result = input
-        return result
+        if input.shape == (1, 1):
+            # Scalar input
+            return input*np.ones(maxsize)
+
+        elif input.shape == (1, maxsize[1]):
+            # Row vector input
+            return input*np.ones((maxsize[0], 1))
+
+        elif input.shape == (maxsize[0], 1):
+            # Column vector input
+            return input*np.ones((1,maxsize[1]))
+        elif input.shape == (maxsize[0], maxsize[1]):
+            # Input already a properly-sized array
+            return input
+        elif input.size == 0:
+            # Input is empty
+            return input
+        elif input.shape == (0,):
+            raise ValueError("Only fsw or Vout can be empty")
+        else:
+            raise ValueError("All inputs must have the same number of rows and columns (if not 1)")
 
 
     def evaluate_loss(self, Vin, Vout, Iout, fsw, Asw, Ac):
@@ -399,6 +418,8 @@ class Implementation:
         :param ac: capacitor area [m^2]
         :return:
         """
+
+        # Converter to numpy arrays
         Vin = np.asarray(Vin)
         Vout = np.asarray(Vout)
         Iout = np.asarray(Iout)
@@ -406,23 +427,36 @@ class Implementation:
         Asw = np.asarray(Asw)
         Ac = np.asarray(Ac)
 
+        # If scalar or 1D array convert to 2D row vector
         if Vin.ndim == 0:
-            Vin = Vin[np.newaxis]
+            Vin = Vin.reshape((1,1))
+        elif Vin.ndim == 1:
+            Vin = Vin.reshape((1,Vin.shape[0]))
 
         if Vout.ndim == 0:
-            Vout = Vout[np.newaxis]
+            Vout = Vout.reshape((1,1))
+        elif Vin.ndim == 1:
+            Vout = Vout.reshape((1,Vout.shape[0]))
 
         if Iout.ndim == 0:
-            Iout = Iout[np.newaxis]
+            Iout = Iout.reshape((1,1))
+        elif Iout.ndim == 1:
+            Iout = Iout.reshape((1,Iout.shape[0]))
 
         if fsw.ndim == 0:
-            fsw = fsw[np.newaxis]
+            fsw = fsw.reshape((1,1))
+        elif fsw.ndim == 1:
+            fsw = fsw.reshape((1,fsw.shape[0]))
 
         if Asw.ndim == 0:
-            Asw = Asw[np.newaxis]
+            Asw = Asw.reshape((1,1))
+        elif Asw.ndim == 1:
+            Asw = Asw.reshape((1,Asw.shape[0]))
 
         if Ac.ndim == 0:
-            Ac = Ac[np.newaxis]
+            Ac = Ac.reshape((1,1))
+        elif Ac.ndim == 1:
+            Ac = Ac.reshape((1,Ac.shape[0]))
 
 
         # Break out components of topology structure
@@ -439,17 +473,19 @@ class Implementation:
         switches = self.switches
         sw_size = self.switch_size
 
-        Vin = np.array(Vin)
+        # Expand input parameters:
+        # If an input is given as a vector then expand all other inputs
+        # to vectors.
+        # If two inputs are given as a row and column vector, respectively,
+        # then expand inputs to 2D arrays.
 
-        # Vectorize inputs according to evaluation type
-        eval_type = 0 # Initialize to invalid type
+        eval_type = 0 # 0: undefined, 1: vout, 2: fsw
 
-        # TODO: Implement parameter expansion
-
-        paramdim = 1
+        paramdim = np.max([Vin.shape, Vout.shape, Iout.shape, fsw.shape, Asw.shape, Ac.shape], axis = 0)
         Vin = self._expand_input(Vin, paramdim)
 
-        if len(Vout) == 0:
+        # If Vout is empty, the evaluate to find Vout
+        if Vout.size == 0:
             eval_type = 1
             Vout = np.zeros(paramdim)
         else:
@@ -457,7 +493,8 @@ class Implementation:
 
         Iout = self._expand_input(Iout, paramdim)
 
-        if len(fsw) == 0:
+        # If fsw is empty then evaluate to find fsw
+        if fsw.size == 0:
             if eval_type == 1:
                 raise ValueError('Both fsw and Vout cannot be undefined')
             else:
@@ -508,6 +545,7 @@ class Implementation:
             Vout = Vin*ratio - Rout*Iout
             Pout = Vout*Iout
             is_prac = np.ones(paramdim)
+
         elif eval_type == 2:
             # fsw is unknown
 #           # Calculate needed output resistance and switching frequency to match
@@ -515,7 +553,7 @@ class Implementation:
             # is_prac is 1 if a finite fsw that satisfies Iout, Vin, Vout exists
 
             Rreq = (Vin*ratio - Vout)/Iout
-            is_prac = ((Rreq > 0) and (Rfsl + Resr < Rreq))*1.0
+            is_prac = ((Rreq > 0) & (Rfsl + Resr < Rreq))*1.0
             Rssl = np.real(np.sqrt(Rreq**2 - (Rfsl + Resr)**2))
             fsw = Rssl_alpha/(Rssl*Ac)
 
@@ -532,14 +570,12 @@ class Implementation:
         Pesr = Resr*Iout**2
         Pres = Rout*Iout**2
 
-
         # Calculate cap related parasitic loss
         Pc_alpha = 0
         for i in range(len(caps)):
             Pc_alpha += caps[i].bottom_cap*cap_size[i]*vcb[i]**2
 
         Pc = Pc_alpha*fsw*Ac*Vin**2
-
 
         # Calculate switch related parasitic loss
         Psw_alpha = 0
@@ -556,26 +592,25 @@ class Implementation:
         Ploss = Pres + Pc + Psw
         eff = Pout/(Pout + Ploss)
 
-        # TODO: Implement dominant loss calculation
-        #IND = []
-        #
-        #for i in range(Pssl):
-        #
-        #
+        # Find dominant loss
+        loss_arr = np.dstack((Pssl,Pfsl,Pesr,Pc,Psw))
+        dominant_loss_args = np.argmax(loss_arr, axis = 2)
+        texts = ["SSL Loss", "FSL Loss", "ESR Loss", "Bottom-plate", "Switch Parasitic"]
+
+        # Pack performance parameters
+        # TODO: Decide whether we should use something else than a dict here
 
         performance = {}
-
         performance["Vout"] = Vout
         performance["fsw"] = fsw
         performance["is_possible"] = is_prac
         performance["efficiency"] = eff
         performance["total_loss"] = Ploss
         performance["impedance"] = Rout
-        #performance["dominant_loss"] = IND
-        #performance["dominant_text"] = texts[IND]
+        performance["dominant_loss"] = dominant_loss_args
+        performance["dominant_text"] = [[texts[x] for x in row] for row in dominant_loss_args]
 
         return performance
-
 
 
     def optimize_loss(self, iout, ac):
@@ -599,17 +634,24 @@ class Implementation:
 
 if __name__ == "__main__":
     from pyseeman.techlib import ITRS16cap, ITRS16sw
-    my_topo = Topology("series-parallel", 1, 2)
-    #my_topo = Topology("ladder", 2, 3)
-    #my_topo = Topology("dickson", 1, 3)
-    #my_topo = Topology("cockcroft-walton", 1, 3)
-    #my_topo = Topology("doubler", 1, 2)
+    my_topo = Topology("series-parallel", 1, 3)
+    my_topo = Topology("ladder", 2, 3)
+    my_topo = Topology("dickson", 1, 3)
+    my_topo = Topology("cockcroft-walton", 1, 3)
+    my_topo = Topology("doubler", 2, 1)
     #my_topo = Topology("fibonacci", 5, 1)
 
     print(my_topo.__dict__)
     my_imp = my_topo.implement(vin=1,  switch_techs=[ITRS16sw], cap_techs=[ITRS16cap], comp_metric=1)
     print(my_imp.__dict__)
 
-    performance = my_imp.evaluate_loss(Vin=1, Vout=0.4, Iout=1e-3, fsw=[], Asw=1e-4, Ac=1e-4)
-    print(performance)
-    print(my_imp.optimize_loss(iout=10e-3, ac=1e-6))
+    # Test 2d loss evaluation
+    performance1 = my_imp.evaluate_loss(np.linspace(3.0,4.0,5).reshape((1,5)), 1.2, 10e-3, [], np.linspace(1e-5,1e-4,5).reshape((5,1)), 1e-4)
+    print(performance1)
+
+    # Test scalar loss evaluation
+    performance2 = my_imp.evaluate_loss(3.7, 1.2, 10e-3, [], 1e-4, 1e-4)
+    print(performance2)
+
+    # test optimization
+    print(my_imp.optimize_loss(iout=1e-3, ac=1e-6))
