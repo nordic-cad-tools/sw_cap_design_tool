@@ -653,6 +653,7 @@ def plot_regulation(topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0
         mode = 2
         indim = len(Vin)
         xval = Vin
+        xlabel = "Input Voltage [V]"
 
     if isinstance(Vin, (int, float)):
         if (mode == 2):
@@ -660,10 +661,11 @@ def plot_regulation(topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0
         mode = 1
         indim = len(Vout)
         xval = Vout
+        xlabel = "Output Voltage [V]"
 
     numtops = len(topologies)
 
-    EFF = np.zeros((numtops, indim))
+    EFF = [0] * numtops
     ASW = []
     pkeff = []
     pkv = []
@@ -672,9 +674,24 @@ def plot_regulation(topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0
 
     Vin_nom = Vin
 
-    for t in topologies:
+    fig, ax = plt.subplots()
+
+    for i, t in enumerate(topologies):
         imp = t.implement(Vin_nom, switches, capacitors)
         [opt_perf, fsw_opt, Asw_opt] = imp.optimize_loss(Iout, Ac)
+        p = imp.evaluate_loss(Vin, Vout, Iout, [], Asw_opt, Ac)
+        EFF = p["efficiency"] * p["is_possible"]
+        VOUT = p["Vout"] * p["is_possible"]
+        EFF[EFF == 0] = 'nan'  # or use np.nan
+        eff_max = np.nanmax(EFF)
+        x_eff_max = np.nanargmax(EFF)
+        eff_trace, = ax.plot(np.squeeze(VOUT), np.squeeze(EFF), label=f'{t.num}:{t.den}')
+        ax.plot(np.squeeze(VOUT)[x_eff_max], eff_max, marker="o", color=eff_trace.get_color())
+
+    ax.set(xlabel=xlabel, ylabel='Efficiency')
+    ax.grid()
+    ax.legend()
+    plt.show()
 
 if __name__ == "__main__":
     from pyseeman.techlib import ITRS16cap, ITRS16sw
@@ -702,6 +719,12 @@ if __name__ == "__main__":
 
     topologies = [Topology("series-parallel", 1, 3),
                   Topology("series-parallel", 1, 2),
-                  Topology("series-parallel", 2, 3)]
-    Vout = np.linspace(0, 1.2, 100)
-    plot_regulation(topologies, 1.2, Vout, 1e-3, 1e-4,[ITRS16sw], [ITRS16cap])
+                  Topology("series-parallel", 2, 3),
+                  Topology("series-parallel", 4, 5)]
+
+    # Test Vout sweep
+    Vout = np.linspace(0, 1.2, 1000).reshape((1, 1000))
+    plot_regulation(topologies, 1.2, Vout, 500e-3, 1e-7, [ITRS16sw], [ITRS16cap])
+
+
+    #print(np.linspace(3.0,4.0,5).reshape((1,5)))
