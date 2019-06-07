@@ -654,6 +654,7 @@ def plot_regulation(topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0
         indim = len(Vin)
         xval = Vin
         xlabel = "Input Voltage [V]"
+        title = f"Regulation @Vout={Vout}"
 
     if isinstance(Vin, (int, float)):
         if (mode == 2):
@@ -661,7 +662,10 @@ def plot_regulation(topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0
         mode = 1
         indim = len(Vout)
         xval = Vout
+        Vin_nom = Vin
         xlabel = "Output Voltage [V]"
+        title = f"Regulation @Vin={Vin}"
+
 
     numtops = len(topologies)
 
@@ -672,26 +676,33 @@ def plot_regulation(topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0
     RATIO = []
     FSW = []
 
-    Vin_nom = Vin
+
 
     fig, ax = plt.subplots()
 
     for i, t in enumerate(topologies):
+        if mode == 2:
+            Vin_nom = Vout/t.ratio
         imp = t.implement(Vin_nom, switches, capacitors)
         [opt_perf, fsw_opt, Asw_opt] = imp.optimize_loss(Iout, Ac)
         p = imp.evaluate_loss(Vin, Vout, Iout, [], Asw_opt, Ac)
         EFF = p["efficiency"] * p["is_possible"]
-        VOUT = p["Vout"] * p["is_possible"]
         EFF[EFF == 0] = 'nan'  # or use np.nan
         eff_max = np.nanmax(EFF)
         x_eff_max = np.nanargmax(EFF)
-        eff_trace, = ax.plot(np.squeeze(VOUT), np.squeeze(EFF), label=f'{t.num}:{t.den}')
-        ax.plot(np.squeeze(VOUT)[x_eff_max], eff_max, marker="o", color=eff_trace.get_color())
+        if mode == 1:
+            VOUT = p["Vout"] * p["is_possible"]
 
-    ax.set(xlabel=xlabel, ylabel='Efficiency')
+            eff_trace, = ax.plot(np.squeeze(VOUT), np.squeeze(EFF), label=f'{t.num}:{t.den}')
+            ax.plot(np.squeeze(VOUT)[x_eff_max], eff_max, marker="o", color=eff_trace.get_color())
+        if mode == 2:
+            eff_trace, = ax.plot(np.squeeze(Vin), np.squeeze(EFF), label=f'{t.num}:{t.den}')
+            ax.plot(np.squeeze(Vin)[x_eff_max], eff_max, marker="o", color=eff_trace.get_color())
+
+
+    ax.set(xlabel=xlabel, ylabel='Efficiency', title=title)
     ax.grid()
     ax.legend()
-    plt.show()
 
 if __name__ == "__main__":
     from pyseeman.techlib import ITRS16cap, ITRS16sw
@@ -726,5 +737,10 @@ if __name__ == "__main__":
     Vout = np.linspace(0, 1.2, 1000).reshape((1, 1000))
     plot_regulation(topologies, 1.2, Vout, 500e-3, 1e-7, [ITRS16sw], [ITRS16cap])
 
+    # Test Vin sweep
+    ITRS16cap.rating = 3
+    Vin = np.linspace(1, 5, 1000).reshape((1, 1000))
+    plot_regulation(topologies, Vin, 1.2, 100e-3, 1e-6, [ITRS16sw], [ITRS16cap])
 
+    plt.show()
     #print(np.linspace(3.0,4.0,5).reshape((1,5)))
