@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.optimize import minimize
+import matplotlib.pyplot as plt
 
 def fibfun(n):
     if n<0:
@@ -629,16 +630,47 @@ class Implementation:
         return performance, np.exp(result.x[0]), np.exp(result.x[1])
 
 
-    def plot_opt_contour(self):
-        pass
+def plot_opt_contour(imp, Vin, Iout, Ac, optMethod = 1,
+                     plot_points = 100, plot_axes = None):
+
+
+    [opt_perf, fsw_opt, Asw_opt] = imp.optimize_loss(Iout, Ac)
+    if plot_axes is None:
+        fsw_min = np.floor(np.log10(fsw_opt)-1)
+        fsw_max = np.ceil(np.log10(fsw_opt)+1)
+        Asw_min = np.floor(np.log10(Asw_opt)-1)
+        Asw_max = np.floor(np.log10(Asw_opt)+1)
+    fsw, Asw = np.meshgrid(np.logspace(fsw_min,fsw_max,plot_points),
+                       np.logspace(Asw_min,Asw_max,plot_points))
+    p = imp.evaluate_loss(Vin, [], Iout, fsw, Asw, Ac)
+    idx_max = np.where(p["efficiency"] == p["efficiency"].max())
+    fig, ax = plt.subplots()
+    ax.contour(fsw, Asw*1e+6, p["dominant_loss"], [0.5, 1.5, 2.5, 3.5], color="red")
+    cs_eff = ax.contour(fsw, Asw*1e+6, p["efficiency"],[.05,.1,.2,.4,.6,.7,.8,.85,.9,.92,.94,.96,.98,1])
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.loglog(fsw[idx_max], Asw[idx_max]*1e+6, marker="*", color="black", markersize=20)
+    ax.clabel(cs_eff, inline=True, fontsize=10, inline_spacing=1)
+    ax.set_xlabel("Switching frequency [Hz]")
+    ax.set_ylabel("Switch area [mm^2]")
+    #dom_loss = p["dominant_loss"]
+    #print(dom_loss)
+    #for i in range(5):
+    #    if (dom_loss == i).any():
+    #        label_xcoord = np.round(np.argmax(dom_loss == i, axis=0).min() + (np#.argmax(dom_loss == i, axis=0).max() - np.argmax(dom_loss == i, axis=0).min()) #/ 2.).astype(int)
+    #        label_ycoord = np.round(np.argmax(dom_loss == i, axis=1).min() + (np.argmax(dom_loss == i, axis=1).max() - np.argmax(dom_loss == i, axis=1).min()) / 2.).astype(int)
+    #        print(label_xcoord)
+     #       print(label_ycoord)
+    return ax
 
 if __name__ == "__main__":
+    plt.close("all")
     from pyseeman.techlib import ITRS16cap, ITRS16sw
     my_topo = Topology("series-parallel", 1, 3)
     my_topo = Topology("ladder", 2, 3)
     my_topo = Topology("dickson", 1, 3)
     my_topo = Topology("cockcroft-walton", 1, 3)
-    my_topo = Topology("doubler", 2, 1)
+    #my_topo = Topology("doubler", 2, 1)
     #my_topo = Topology("fibonacci", 5, 1)
 
     print(my_topo.__dict__)
@@ -655,3 +687,6 @@ if __name__ == "__main__":
 
     # test optimization
     print(my_imp.optimize_loss(iout=1e-3, ac=1e-6))
+
+    ax1 = plot_opt_contour(my_imp, 3.0, 100e-3, 1e-5, 1, plot_points=100)
+    plt.show()
