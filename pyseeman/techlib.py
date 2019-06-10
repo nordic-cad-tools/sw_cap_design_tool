@@ -83,7 +83,7 @@ class HVcap:
     area = 40e-6 * 40e-6
     bottom_cap = 135.3e-15
     esr = 0
-    rating = 1.2
+    rating = 12
 
 class ITRS90sw:
     """
