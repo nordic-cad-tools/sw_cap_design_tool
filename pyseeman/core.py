@@ -245,17 +245,13 @@ class Topology:
     def implement(self, vin, switch_techs, cap_techs, comp_metric=1):
         return Implementation(self, vin, switch_techs, cap_techs, comp_metric)
 
-    def permute(self, topology):
-        """
-        Returns a new topology consisting of every permutation of topologies. The specified topology will be cascaded
-        with the current topology.
-        :param topology:
-        :return:
-        """
-        pass
 
     def __repr__(self):
-        return f"<Topology(name={self.name}, ratio={self.ratio})>"
+        #return f"<Topology(name={self.name}, ratio={self.ratio})>"
+        my_string = ""
+        for k, v in self.__dict__.items():
+            my_string += f"{k} = {v}\n"
+        return my_string
 
 
 class Implementation:
@@ -628,6 +624,14 @@ class Implementation:
             raise RuntimeError("optimization is not sucessfull")
         performance = self.evaluate_loss(self.vin, [], iout, np.exp(result.x[0]), np.exp(result.x[1]), ac)
         return performance, np.exp(result.x[0]), np.exp(result.x[1])
+
+
+    def __repr__(self):
+        #return f"<Topology(name={self.name}, ratio={self.ratio})>"
+        my_string = ""
+        for k, v in self.__dict__.items():
+            my_string += f"{k} = {v}\n"
+        return my_string
 
 
 def plot_opt_contour(imp, Vin, Iout, Ac, plot_points = 100, plot_axes = None):
