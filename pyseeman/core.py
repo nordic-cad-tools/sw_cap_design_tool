@@ -341,13 +341,13 @@ class Implementation:
                         C = switch_tech.area
                         M = switch_tech.conductance * vr[i] ** 2 / C
 
-                if M > Msw:
-                    if Msw == 0:
-                        switch_assign.append(switch_tech)
-                    else:
-                        switch_assign[i] = switch_tech
-                    Msw = M
-                    Csw = C
+                    if M > Msw:
+                        if Msw == 0:
+                            switch_assign.append(switch_tech)
+                        else:
+                            switch_assign[i] = switch_tech
+                        Msw = M
+                        Csw = C
 
             # check to make sure a suitable device exists
             if Msw == 0:
