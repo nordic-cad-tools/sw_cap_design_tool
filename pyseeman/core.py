@@ -432,7 +432,7 @@ class Implementation:
 
         if Vout.ndim == 0:
             Vout = Vout.reshape((1,1))
-        elif Vin.ndim == 1:
+        elif Vout.ndim == 1:
             Vout = Vout.reshape((1,Vout.shape[0]))
 
         if Iout.ndim == 0:
@@ -460,10 +460,10 @@ class Implementation:
         ratio = self.topology.ratio
         ac = self.topology.ac
         ar = self.topology.ar
-        vc = self.topology.vc * self.vin
-        vr = self.topology.vr * self.vin
-        vcb = self.topology.vcb * self.vin
-        vrb = self.topology.vrb * self.vin
+        vc = self.topology.vc# * self.vin
+        vr = self.topology.vr# * self.vin
+        vcb = self.topology.vcb# * self.vin
+        vrb = self.topology.vrb# * self.vin
 
         caps = self.capacitors
         cap_size = self.cap_size
@@ -481,7 +481,7 @@ class Implementation:
         paramdim = np.max([Vin.shape, Vout.shape, Iout.shape, fsw.shape, Asw.shape, Ac.shape], axis = 0)
         Vin = self._expand_input(Vin, paramdim)
 
-        # If Vout is empty, the evaluate to find Vout
+        # If Vout is empty, then evaluate to find Vout
         if Vout.size == 0:
             eval_type = 1
             Vout = np.zeros(paramdim)
