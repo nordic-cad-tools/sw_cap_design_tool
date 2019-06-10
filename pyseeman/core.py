@@ -246,6 +246,14 @@ class Topology:
     def implement(self, vin, switch_techs, cap_techs, comp_metric=1):
         return Implementation(self, vin, switch_techs, cap_techs, comp_metric)
 
+    def permute(self, topology):
+        """
+        Returns a new topology consisting of every permutation of topologies. The specified topology will be cascaded
+        with the current topology.
+        :param topology:
+        :return:
+        """
+        pass
 
     def __repr__(self):
         #return f"<Topology(name={self.name}, ratio={self.ratio})>"
@@ -678,6 +686,76 @@ def plot_opt_contour(imp, Vin, Iout, Ac, plot_points = 100, plot_axes = None):
     return ax
 
 
+def plot_regulation(topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0, idesign=0):
+    """
+
+    :param topologies: A matrix of topologies and ratios
+    :param Vin: Input voltage of converter (could be a vector)
+    :param Vout: Output voltage of converter (a vector if Vin is a scalar)
+    :param Iout: Matching vector of output currents [A]
+    :param Ac: Capacitor area constraint (in m^2).  fsw will be swept, Asw will be chosen automatically
+    :param switches: a row vector of switch technology structures
+    :param capacitors: a row vector of capacitor technology structures
+    :param esr: the output-referred constant esr of requisite metal (ie, bondwires).  Default = 0
+    :param idesign: a vector (size = number of topologies) containing the nominal design current for each topology
+    :return:
+    """
+    mode = 0  # 1 = Vout, 2 = Vin swept
+    if isinstance(Vout, (int, float)):
+        mode = 2
+        indim = len(Vin)
+        xval = Vin
+        xlabel = "Input Voltage [V]"
+        title = f"Regulation @Vout={Vout}"
+
+    if isinstance(Vin, (int, float)):
+        if (mode == 2):
+            raise RuntimeError('Cannot sweep both Vin and Vout')
+        mode = 1
+        indim = len(Vout)
+        xval = Vout
+        Vin_nom = Vin
+        xlabel = "Output Voltage [V]"
+        title = f"Regulation @Vin={Vin}"
+
+
+    numtops = len(topologies)
+
+    EFF = [0] * numtops
+    ASW = []
+    pkeff = []
+    pkv = []
+    RATIO = []
+    FSW = []
+
+
+
+    fig, ax = plt.subplots()
+
+    for i, t in enumerate(topologies):
+        if mode == 2:
+            Vin_nom = Vout/t.ratio
+        imp = t.implement(Vin_nom, switches, capacitors)
+        [opt_perf, fsw_opt, Asw_opt] = imp.optimize_loss(Iout, Ac)
+        p = imp.evaluate_loss(Vin, Vout, Iout, [], Asw_opt, Ac)
+        EFF = p["efficiency"] * p["is_possible"]
+        EFF[EFF == 0] = 'nan'  # or use np.nan
+        eff_max = np.nanmax(EFF)
+        x_eff_max = np.nanargmax(EFF)
+        if mode == 1:
+            VOUT = p["Vout"] * p["is_possible"]
+
+            eff_trace, = ax.plot(np.squeeze(VOUT), np.squeeze(EFF), label=f'{t.num}:{t.den}')
+            ax.plot(np.squeeze(VOUT)[x_eff_max], eff_max, marker="o", color=eff_trace.get_color())
+        if mode == 2:
+            eff_trace, = ax.plot(np.squeeze(Vin), np.squeeze(EFF), label=f'{t.num}:{t.den}')
+            ax.plot(np.squeeze(Vin)[x_eff_max], eff_max, marker="o", color=eff_trace.get_color())
+
+
+    ax.set(xlabel=xlabel, ylabel='Efficiency', title=title)
+    ax.grid()
+    ax.legend()
+
 def cascade_topologies(topology1, topology2):
     """
     Returns a new topology consisting of series connection of the two input topologies
@@ -724,6 +802,8 @@ def permute_topologies(topologies1, topologies2):
             newtops.append(cascade_topologies(top1,top2))
 
     return newtops
+
+
 
 
 if __name__ == "__main__":
@@ -800,3 +880,23 @@ if __name__ == "__main__":
 
     plt.show()
 
+
+    # test optimization
+    print(my_imp.optimize_loss(iout=1e-3, ac=1e-6))
+
+    topologies = [Topology("series-parallel", 1, 3),
+                  Topology("series-parallel", 1, 2),
+                  Topology("series-parallel", 2, 3),
+                  Topology("series-parallel", 4, 5)]
+
+    # Test Vout sweep
+    Vout = np.linspace(0, 1.2, 1000).reshape((1, 1000))
+    plot_regulation(topologies, 1.2, Vout, 500e-3, 1e-7, [ITRS16sw], [ITRS16cap])
+
+    # Test Vin sweep
+    ITRS16cap.rating = 3
+    Vin = np.linspace(1, 5, 1000).reshape((1, 1000))
+    plot_regulation(topologies, Vin, 1.2, 100e-3, 1e-6, [ITRS16sw], [ITRS16cap])
+
+    plt.show()
+    #print(np.linspace(3.0,4.0,5).reshape((1,5)))
