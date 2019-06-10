@@ -653,14 +653,14 @@ def plot_opt_contour(imp, Vin, Iout, Ac, plot_points = 100, plot_axes = None):
         fsw_min = np.floor(np.log10(fsw_opt)-1)
         fsw_max = np.ceil(np.log10(fsw_opt)+1)
         Asw_min = np.floor(np.log10(Asw_opt)-1)
-        Asw_max = np.floor(np.log10(Asw_opt)+1)
+        Asw_max = np.ceil(np.log10(Asw_opt)+1)
 
-    # Geenrate plot mesh and evaluate performance
+    # Generate plot mesh and evaluate performance
     fsw, Asw = np.meshgrid(np.logspace(fsw_min,fsw_max,plot_points),
                        np.logspace(Asw_min,Asw_max,plot_points))
     p = imp.evaluate_loss(Vin, [], Iout, fsw, Asw, Ac)
 
-    # Find indeces of optimum point
+    # Find indices of optimum point
     idx_max = np.where(p["efficiency"] == p["efficiency"].max())
 
     # Plot contours, maximum point, and dominant loss regions
