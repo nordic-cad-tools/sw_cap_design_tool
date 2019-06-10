@@ -706,6 +706,7 @@ def plot_regulation(topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0
         indim = len(Vin)
         xval = Vin
         xlabel = "Input Voltage [V]"
+        xlim = (Vin.min(), Vin.max())
         title = f"Regulation @Vout={Vout}"
 
     if isinstance(Vin, (int, float)):
@@ -716,6 +717,7 @@ def plot_regulation(topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0
         xval = Vout
         Vin_nom = Vin
         xlabel = "Output Voltage [V]"
+        xlim = (Vout.min(), Vout.max())
         title = f"Regulation @Vin={Vin}"
 
 
@@ -738,7 +740,7 @@ def plot_regulation(topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0
         imp = t.implement(Vin_nom, switches, capacitors)
         [opt_perf, fsw_opt, Asw_opt] = imp.optimize_loss(Iout, Ac)
         p = imp.evaluate_loss(Vin, Vout, Iout, [], Asw_opt, Ac)
-        EFF = p["efficiency"] * p["is_possible"]
+        EFF = 100*p["efficiency"] * p["is_possible"]
         EFF[EFF == 0] = 'nan'  # or use np.nan
         eff_max = np.nanmax(EFF)
         x_eff_max = np.nanargmax(EFF)
@@ -752,7 +754,7 @@ def plot_regulation(topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0
             ax.plot(np.squeeze(Vin)[x_eff_max], eff_max, marker="o", color=eff_trace.get_color())
 
 
-    ax.set(xlabel=xlabel, ylabel='Efficiency', title=title)
+    ax.set(xlabel=xlabel, ylabel='Efficiency [%]', title=title, xlim=xlim)
     ax.grid()
     ax.legend()
 
