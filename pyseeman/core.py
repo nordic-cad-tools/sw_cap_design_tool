@@ -854,6 +854,9 @@ if __name__ == "__main__":
 
     # Test Vin sweep
     ITRS16cap.rating = 3
+    ITRS16sw.drain_rating = 3
+    ITRS16sw.gate_rating = 3
+
     Vin = np.linspace(1, 5, 1000).reshape((1, 1000))
     plot_regulation(topologies, Vin, 1.2, 100e-3, 1e-6, [ITRS16sw], [ITRS16cap])
 
