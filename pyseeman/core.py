@@ -18,7 +18,7 @@ class Topology:
                     "doubler", "series-parallel", "fibonacci"}
 
     def __init__(self, name, num, den):
-        if name not in self._valid_names:
+        if name.lower() not in self._valid_names:
                 raise ValueError(f"{name} is not a valid name {self._valid_names}")
         self.name = name
         self.num = num
