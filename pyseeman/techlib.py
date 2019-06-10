@@ -83,7 +83,7 @@ class HVcap:
     area = 40e-6 * 40e-6
     bottom_cap = 135.3e-15
     esr = 0
-    rating = 1.2
+    rating = 12
 
 class ITRS90sw:
     """
@@ -162,7 +162,7 @@ class ITRS16sw:
     """
     tech_name = 'ITRS 16 nm'
     dev_name = 'ITRS 16 nm NMOS native transistor'
-    area = 1e-6 * 16e-9 / .3
+    area = 1e-6 * 16e-9 / .25
     conductance = 2.535e-3
     gate_rating = 1.25
     drain_rating = 1.25
