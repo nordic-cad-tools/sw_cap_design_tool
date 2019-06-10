@@ -804,51 +804,19 @@ def permute_topologies(topologies1, topologies2):
     return newtops
 
 
-
-
 if __name__ == "__main__":
     plt.close("all")
     from pyseeman.techlib import ITRS16cap, HVcap, ITRS16sw
-#    my_topo1 = Topology("series-parallel", 1, 3)
-#    my_topo2 = Topology("ladder", 2, 3)
-#    my_topo3 = Topology("dickson", 1, 3)
-#    my_topo4 = Topology("cockcroft-walton", 1, 3)
-#    #my_topo = Topology("doubler", 2, 1)
-#    #my_topo = Topology("fibonacci", 5, 1)
-#
-#    print(my_topo4.__dict__)
-#    my_imp = my_topo4.implement(vin=1,  switch_techs=[ITRS16sw], cap_techs=[ITRS16cap], comp_metric=1)
-#    print(my_imp.__dict__)
-#
-#    # Test 2d loss evaluation
-#    performance1 = my_imp.evaluate_loss(np.linspace(3.0,4.0,5).reshape((1,5)), 1.2, 10e-3, [], np.linspace(1e-5,1e-4,5).reshape((5,1)), 1e-4)
-#    print(performance1)
-#
-#    # Test scalar loss evaluation
-#    performance2 = my_imp.evaluate_loss(3.7, 1.2, 10e-3, [], 1e-4, 1e-4)
-#    print(performance2)
-#
-#    # test optimization
-#    print(my_imp.optimize_loss(iout=1e-3, ac=1e-6))
-#
-#    ax1 = plot_opt_contour(my_imp, 3.0, 10e-3, 1e-6, plot_points=100)
-#    plt.show()
-#
-#    # Cascade two instances of the same topolog
-#    casc_topo = cascade_topologies(my_topo1, my_topo2)
-#    perm_topos = permute_topologies([my_topo1, my_topo2, my_topo3], [my_topo1, my_topo4])
 
     top_stepdown_1 = Topology("Ladder", 2, 3)
     top_stepdown_2 = Topology("Dickson", 1, 3)
     top_stepdown_3 = Topology("Cockcroft-Walton", 1, 4)
     top_stepdown_4 = Topology("Doubler", 1, 2)
-    # top_stepdown_5 = Topology("Fibonacci", 1, 5) % (fibfun missing in Matlab version...)
 
     top_stepup_1 = Topology("Ladder", 3, 2)
     top_stepup_2 = Topology("Dickson", 3, 1)
     top_stepup_3 = Topology("Cockcroft-Walton", 4, 1)
     top_stepup_4 = Topology("Doubler", 2, 1)
-    # top_stepup_5 = Topology("Fibonacci", 9, 1) % (fibfun missing in Matlab version...)
 
     imp_stepdown_1 = top_stepdown_1.implement(1.5, [ITRS16sw], [ITRS16cap, HVcap], 1)
     imp_stepdown_2 = top_stepdown_2.implement(1.5, [ITRS16sw], [ITRS16cap, HVcap], 1)
@@ -861,28 +829,17 @@ if __name__ == "__main__":
     imp_stepup_4 = top_stepup_4.implement(0.25, [ITRS16sw], [ITRS16cap, HVcap], 1)
 
     ax1 = plot_opt_contour(imp_stepdown_1, 2.0, 10e-3, 1e-6)
-    plt.savefig("imp_stepdown_1.png")
     ax2 = plot_opt_contour(imp_stepdown_2, 2.0, 10e-3, 1e-6)
-    plt.savefig("imp_stepdown_2.png")
     ax3 = plot_opt_contour(imp_stepdown_3, 2.0, 10e-3, 1e-6)
-    plt.savefig("imp_stepdown_3.png")
     ax4 = plot_opt_contour(imp_stepdown_4, 2.0, 10e-3, 1e-6)
-    plt.savefig("imp_stepdown_4.png")
 
     ax5 = plot_opt_contour(imp_stepup_1, 0.25, 10e-3, 1e-6)
-    plt.savefig("imp_stepup_1.png")
     ax6 = plot_opt_contour(imp_stepup_2, 0.25, 10e-3, 1e-6)
-    plt.savefig("imp_stepup_2.png")
     ax7 = plot_opt_contour(imp_stepup_3, 0.25, 10e-3, 1e-6)
-    plt.savefig("imp_stepup_3.png")
     ax8 = plot_opt_contour(imp_stepup_4, 0.25, 10e-3, 1e-6)
-    plt.savefig("imp_stepup_4.png")
-
-    plt.show()
-
 
     # test optimization
-    print(my_imp.optimize_loss(iout=1e-3, ac=1e-6))
+    print(imp_stepdown_1.optimize_loss(iout=1e-3, ac=1e-6))
 
     topologies = [Topology("series-parallel", 1, 3),
                   Topology("series-parallel", 1, 2),
@@ -899,4 +856,3 @@ if __name__ == "__main__":
     plot_regulation(topologies, Vin, 1.2, 100e-3, 1e-6, [ITRS16sw], [ITRS16cap])
 
     plt.show()
-    #print(np.linspace(3.0,4.0,5).reshape((1,5)))
