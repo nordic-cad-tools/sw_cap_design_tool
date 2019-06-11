@@ -711,28 +711,28 @@ def plot_opt_contour(imp, vin, iout, ac, plot_points=100, plot_axes=None):
         asw_max = np.ceil(np.log10(asw_opt) + 1)
 
     # Generate plot mesh and evaluate performance
-    fsw, Asw = np.meshgrid(
+    fsw, asw = np.meshgrid(
         np.logspace(fsw_min, fsw_max, plot_points),
         np.logspace(asw_min, asw_max, plot_points),
     )
-    p = imp.evaluate_loss(vin, [], iout, fsw, Asw, ac)
+    p = imp.evaluate_loss(vin, [], iout, fsw, asw, ac)
 
     # Find indices of optimum point
     idx_max = np.where(p["efficiency"] == p["efficiency"].max())
 
     # Plot contours, maximum point, and dominant loss regions
     fig, ax = plt.subplots()
-    ax.contour(fsw, Asw * 1e6, p["dominant_loss"], [0.5, 1.5, 2.5, 3.5], colors="grey")
+    ax.contour(fsw, asw * 1e6, p["dominant_loss"], [0.5, 1.5, 2.5, 3.5], colors="grey")
     cs_eff = ax.contour(
         fsw,
-        Asw * 1e6,
+        asw * 1e6,
         p["efficiency"],
         [0.05, 0.1, 0.2, 0.4, 0.6, 0.7, 0.8, 0.85, 0.9, 0.92, 0.94, 0.96, 0.98, 1],
     )
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.loglog(
-        fsw[idx_max], Asw[idx_max] * 1e6, marker="*", color="black", markersize=20
+        fsw[idx_max], asw[idx_max] * 1e6, marker="*", color="black", markersize=20
     )
     ax.clabel(cs_eff, inline=True, fontsize=10, inline_spacing=1)
     ax.set_xlabel("Switching frequency [Hz]")
