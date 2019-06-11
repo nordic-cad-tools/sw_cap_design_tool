@@ -13,5 +13,6 @@ jobs:
   include:
     - stage: syntax checking
     script: 
+    - echo "Running syntax checking..."
     - black --check .
     
