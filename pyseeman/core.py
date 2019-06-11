@@ -745,15 +745,15 @@ def plot_opt_contour(imp, vin, iout, ac, plot_points=100, plot_axes=None):
 
 
 def plot_regulation(
-    topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0, idesign=0
+    topologies, vin, vout, iout, ac, switches, capacitors, esr=0, idesign=0
 ):
     """
 
     :param topologies: A matrix of topologies and ratios
-    :param Vin: Input voltage of converter (could be a vector)
-    :param Vout: Output voltage of converter (a vector if Vin is a scalar)
-    :param Iout: Matching vector of output currents [A]
-    :param Ac: Capacitor area constraint (in m^2).  fsw will be swept, Asw will be chosen automatically
+    :param vin: Input voltage of converter (could be a vector)
+    :param vout: Output voltage of converter (a vector if Vin is a scalar)
+    :param iout: Matching vector of output currents [A]
+    :param ac: Capacitor area constraint (in m^2).  fsw will be swept, Asw will be chosen automatically
     :param switches: a row vector of switch technology structures
     :param capacitors: a row vector of capacitor technology structures
     :param esr: the output-referred constant esr of requisite metal (ie, bondwires).  Default = 0
@@ -761,64 +761,55 @@ def plot_regulation(
     :return:
     """
     mode = 0  # 1 = Vout, 2 = Vin swept
-    if isinstance(Vout, (int, float)):
+    if isinstance(vout, (int, float)):
         mode = 2
-        indim = len(Vin)
-        xval = Vin
         xlabel = "Input Voltage [V]"
-        xlim = (Vin.min(), Vin.max())
-        title = f"Regulation @Vout={Vout}"
+        xlim = (vin.min(), vin.max())
+        title = f"Regulation @Vout={vout}"
 
-    if isinstance(Vin, (int, float)):
+    if isinstance(vin, (int, float)):
         if mode == 2:
             raise RuntimeError("Cannot sweep both Vin and Vout")
         mode = 1
-        indim = len(Vout)
-        xval = Vout
-        Vin_nom = Vin
+        vin_nom = vin
         xlabel = "Output Voltage [V]"
-        xlim = (Vout.min(), Vout.max())
-        title = f"Regulation @Vin={Vin}"
+        xlim = (vout.min(), vout.max())
+        title = f"Regulation @Vin={vin}"
 
     numtops = len(topologies)
 
-    EFF = [0] * numtops
-    ASW = []
-    pkeff = []
-    pkv = []
-    RATIO = []
-    FSW = []
+    eff = [0] * numtops
 
     fig, ax = plt.subplots()
 
     for i, t in enumerate(topologies):
         if mode == 2:
-            Vin_nom = Vout / t.ratio
-        imp = t.implement(Vin_nom, switches, capacitors)
-        [opt_perf, fsw_opt, Asw_opt] = imp.optimize_loss(Iout, Ac)
-        p = imp.evaluate_loss(Vin, Vout, Iout, [], Asw_opt, Ac)
-        EFF = 100 * p["efficiency"] * p["is_possible"]
-        EFF[EFF == 0] = "nan"  # or use np.nan
-        eff_max = np.nanmax(EFF)
-        x_eff_max = np.nanargmax(EFF)
+            vin_nom = vout / t.ratio
+        imp = t.implement(vin_nom, switches, capacitors)
+        [opt_perf, fsw_opt, asw_opt] = imp.optimize_loss(iout, ac)
+        p = imp.evaluate_loss(vin, vout, iout, [], asw_opt, ac)
+        eff = 100 * p["efficiency"] * p["is_possible"]
+        eff[eff == 0] = "nan"  # or use np.nan
+        eff_max = np.nanmax(eff)
+        x_eff_max = np.nanargmax(eff)
         if mode == 1:
-            VOUT = p["Vout"] * p["is_possible"]
+            vout_1 = p["Vout"] * p["is_possible"]
 
             eff_trace, = ax.plot(
-                np.squeeze(VOUT), np.squeeze(EFF), label=f"{t.num}:{t.den}"
+                np.squeeze(vout_1), np.squeeze(eff), label=f"{t.num}:{t.den}"
             )
             ax.plot(
-                np.squeeze(VOUT)[x_eff_max],
+                np.squeeze(vout_1)[x_eff_max],
                 eff_max,
                 marker="o",
                 color=eff_trace.get_color(),
             )
         if mode == 2:
             eff_trace, = ax.plot(
-                np.squeeze(Vin), np.squeeze(EFF), label=f"{t.num}:{t.den}"
+                np.squeeze(vin), np.squeeze(eff), label=f"{t.num}:{t.den}"
             )
             ax.plot(
-                np.squeeze(Vin)[x_eff_max],
+                np.squeeze(vin)[x_eff_max],
                 eff_max,
                 marker="o",
                 color=eff_trace.get_color(),
@@ -827,6 +818,7 @@ def plot_regulation(
     ax.set(xlabel=xlabel, ylabel="Efficiency [%]", title=title, xlim=xlim)
     ax.grid()
     ax.legend()
+    return ax
 
 
 def cascade_topologies(topology1, topology2):
