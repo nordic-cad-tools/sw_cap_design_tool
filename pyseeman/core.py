@@ -689,33 +689,33 @@ class Implementation:
         return my_string
 
 
-def plot_opt_contour(imp, Vin, Iout, Ac, plot_points=100, plot_axes=None):
+def plot_opt_contour(imp, vin, iout, ac, plot_points=100, plot_axes=None):
     """
     Create efficiency contour plot of efficiency
     :param imp: implementation object
-    :param Vin: input voltage [V]
-    :param Iout: output current [A]
-    :param Ac: Capacitor area [mm^2]
+    :param vin: input voltage [V]
+    :param iout: output current [A]
+    :param ac: Capacitor area [mm^2]
     :param plot_points: Number of points to plot (default: 100)
     :param plot_axes: Array of plot limits 10-exponents (optional)
     :return:
     """
     # Find optimal operating point
-    [opt_perf, fsw_opt, Asw_opt] = imp.optimize_loss(Iout, Ac)
+    [opt_perf, fsw_opt, asw_opt] = imp.optimize_loss(iout, ac)
 
     # Define plot region around the optimum
     if plot_axes is None:
         fsw_min = np.floor(np.log10(fsw_opt) - 1)
         fsw_max = np.ceil(np.log10(fsw_opt) + 1)
-        Asw_min = np.floor(np.log10(Asw_opt) - 1)
-        Asw_max = np.ceil(np.log10(Asw_opt) + 1)
+        asw_min = np.floor(np.log10(asw_opt) - 1)
+        asw_max = np.ceil(np.log10(asw_opt) + 1)
 
     # Generate plot mesh and evaluate performance
     fsw, Asw = np.meshgrid(
         np.logspace(fsw_min, fsw_max, plot_points),
-        np.logspace(Asw_min, Asw_max, plot_points),
+        np.logspace(asw_min, asw_max, plot_points),
     )
-    p = imp.evaluate_loss(Vin, [], Iout, fsw, Asw, Ac)
+    p = imp.evaluate_loss(vin, [], iout, fsw, Asw, ac)
 
     # Find indices of optimum point
     idx_max = np.where(p["efficiency"] == p["efficiency"].max())
@@ -739,7 +739,7 @@ def plot_opt_contour(imp, Vin, Iout, Ac, plot_points=100, plot_axes=None):
     ax.set_ylabel("Switch area [mm^2]")
     ax.set_title(
         "Iout = %.2e A, Ac = %.4f mm^2, Eff = %.1f%%"
-        % (Iout, Ac * 1e6, p["efficiency"].max() * 100)
+        % (iout, ac * 1e6, p["efficiency"].max() * 100)
     )
     return ax
 
