@@ -455,7 +455,7 @@ class Implementation:
                 "All inputs must have the same number of rows and columns (if not 1)"
             )
 
-    def evaluate_loss(self, vin, vout, iout, fsw, asw, Ac):
+    def evaluate_loss(self, vin, vout, iout, fsw, area_sw, area_cap):
         """
         Evaluate_loss: evaluates the loss and other peformance metrics for a
         specific size and operating condition of a implemented SC converter
@@ -463,7 +463,7 @@ class Implementation:
         :param vout: converter output voltage for this calc [V]
         :param iout: converter output current for this calc [A]
         :param fsw: switching frequency [Hz]
-        :param asw: switch area [m^2]
+        :param area_sw: switch area [m^2]
         :param ac: capacitor area [m^2]
         :return:
         """
@@ -473,8 +473,8 @@ class Implementation:
         vout = np.asarray(vout)
         iout = np.asarray(iout)
         fsw = np.asarray(fsw)
-        asw = np.asarray(asw)
-        Ac = np.asarray(Ac)
+        area_sw = np.asarray(area_sw)
+        area_cap = np.asarray(area_cap)
 
         # If scalar or 1D array convert to 2D row vector
         if vin.ndim == 0:
@@ -497,15 +497,15 @@ class Implementation:
         elif fsw.ndim == 1:
             fsw = fsw.reshape((1, fsw.shape[0]))
 
-        if asw.ndim == 0:
-            asw = asw.reshape((1, 1))
-        elif asw.ndim == 1:
-            asw = asw.reshape((1, asw.shape[0]))
+        if area_sw.ndim == 0:
+            area_sw = area_sw.reshape((1, 1))
+        elif area_sw.ndim == 1:
+            area_sw = area_sw.reshape((1, area_sw.shape[0]))
 
-        if Ac.ndim == 0:
-            Ac = Ac.reshape((1, 1))
-        elif Ac.ndim == 1:
-            Ac = Ac.reshape((1, Ac.shape[0]))
+        if area_cap.ndim == 0:
+            area_cap = area_cap.reshape((1, 1))
+        elif area_cap.ndim == 1:
+            area_cap = area_cap.reshape((1, area_cap.shape[0]))
 
         # Break out components of topology structure
         ratio = self.topology.ratio
@@ -530,7 +530,7 @@ class Implementation:
         eval_type = 0  # 0: undefined, 1: vout, 2: fsw
 
         paramdim = np.max(
-            [vin.shape, vout.shape, iout.shape, fsw.shape, asw.shape, Ac.shape], axis=0
+            [vin.shape, vout.shape, iout.shape, fsw.shape, area_sw.shape, area_cap.shape], axis=0
         )
         vin = self._expand_input(vin, paramdim)
 
@@ -553,8 +553,8 @@ class Implementation:
         else:
             fsw = self._expand_input(fsw, paramdim)
 
-        asw = self._expand_input(asw, paramdim)
-        Ac = self._expand_input(Ac, paramdim)
+        area_sw = self._expand_input(area_sw, paramdim)
+        area_cap = self._expand_input(area_cap, paramdim)
 
         # ********************** Start analysis ***********************#
         # Calculate SSL output resistance
@@ -570,7 +570,7 @@ class Implementation:
         for i in range(len(switches)):
             if ar[i] > 0:
                 Rfsl_alpha += 2 * ar[i] ** 2 / (switches[i].conductance * sw_size[i])
-        Rfsl = Rfsl_alpha / asw
+        Rfsl = Rfsl_alpha / area_sw
 
         # Calculate ESR loss
         Resr_alpha = 0
@@ -578,14 +578,14 @@ class Implementation:
         for i in range(len(caps)):
             if ac[i] > 0:
                 Resr_alpha += 4 * ac[i] ** 2 * caps[i].esr / cap_size[i]
-        Resr = Resr_alpha / Ac
+        Resr = Resr_alpha / area_cap
         if hasattr(self, "esr"):
             Resr += self.esr
 
         # Calculate the unknown variable
         if eval_type == 1:
             # Vout is unknown
-            Rssl = Rssl_alpha / (fsw * Ac)
+            Rssl = Rssl_alpha / (fsw * area_cap)
 
             # Calculate total output resistance
             Rout = np.sqrt(Rssl ** 2 + (Rfsl + Resr) ** 2)
@@ -602,7 +602,7 @@ class Implementation:
             Rreq = (vin * ratio - vout) / iout
             is_prac = ((Rreq > 0) & (Rfsl + Resr < Rreq)) * 1.0
             Rssl = np.real(np.sqrt(Rreq ** 2 - (Rfsl + Resr) ** 2))
-            fsw = Rssl_alpha / (Rssl * Ac)
+            fsw = Rssl_alpha / (Rssl * area_cap)
 
             # Calculate total output resistance
             Rout = np.sqrt(Rssl ** 2 + (Rfsl + Resr) ** 2)
@@ -621,7 +621,7 @@ class Implementation:
         for i in range(len(caps)):
             Pc_alpha += caps[i].bottom_cap * cap_size[i] * vcb[i] ** 2
 
-        Pc = Pc_alpha * fsw * Ac * vin ** 2
+        Pc = Pc_alpha * fsw * area_cap * vin ** 2
 
         # Calculate switch related parasitic loss
         Psw_alpha = 0
@@ -634,7 +634,7 @@ class Implementation:
                 switches[i].drain_cap * sw_size[i] * vr[i] ** 2
                 + switches[i].body_cap * sw_size[i] * vrb[i] ** 2
             )
-        Psw = (Psw_alpha * vin ** 2 + Pg_alpha) * fsw * asw
+        Psw = (Psw_alpha * vin ** 2 + Pg_alpha) * fsw * area_sw
 
         # Calculate total loss, efficiency, etc.
         Ploss = Pres + Pc + Psw
@@ -662,22 +662,22 @@ class Implementation:
 
         return performance
 
-    def optimize_loss(self, iout, ac):
+    def optimize_loss(self, iout, area_cap):
         """
         Finds the optimal design point for given conditions
         :param iout: converter output current for this calc [A]
-        :param ac: capacitor area [m^2]
+        :param area_cap: capacitor area [m^2]
         :return:
         """
         opt_func = lambda x: self.evaluate_loss(
-            vin=self.vin, vout=[], iout=iout, fsw=np.exp(x[0]), asw=np.exp(x[1]), Ac=ac
+            vin=self.vin, vout=[], iout=iout, fsw=np.exp(x[0]), area_sw=np.exp(x[1]), area_cap=area_cap
         )["total_loss"]
         x0 = np.array([10, -10])
         result = minimize(opt_func, x0, bounds=((1, 100), (-100, 1)), tol=1e-12)
         if result["success"] is not True:
             raise RuntimeError("optimization is not sucessfull")
         performance = self.evaluate_loss(
-            self.vin, [], iout, np.exp(result.x[0]), np.exp(result.x[1]), ac
+            self.vin, [], iout, np.exp(result.x[0]), np.exp(result.x[1]), area_cap
         )
         return performance, np.exp(result.x[0]), np.exp(result.x[1])
 
@@ -689,19 +689,19 @@ class Implementation:
         return my_string
 
 
-def plot_opt_contour(imp, vin, iout, ac, plot_points=100, plot_axes=None):
+def plot_opt_contour(imp, vin, iout, area_cap, plot_points=100, plot_axes=None):
     """
     Create efficiency contour plot of efficiency
     :param imp: implementation object
     :param vin: input voltage [V]
     :param iout: output current [A]
-    :param ac: Capacitor area [mm^2]
+    :param area_cap: Capacitor area [mm^2]
     :param plot_points: Number of points to plot (default: 100)
     :param plot_axes: Array of plot limits 10-exponents (optional)
     :return:
     """
     # Find optimal operating point
-    [opt_perf, fsw_opt, asw_opt] = imp.optimize_loss(iout, ac)
+    [opt_perf, fsw_opt, asw_opt] = imp.optimize_loss(iout, area_cap)
 
     # Define plot region around the optimum
     if plot_axes is None:
@@ -715,7 +715,7 @@ def plot_opt_contour(imp, vin, iout, ac, plot_points=100, plot_axes=None):
         np.logspace(fsw_min, fsw_max, plot_points),
         np.logspace(asw_min, asw_max, plot_points),
     )
-    p = imp.evaluate_loss(vin, [], iout, fsw, asw, ac)
+    p = imp.evaluate_loss(vin, [], iout, fsw, asw, area_cap)
 
     # Find indices of optimum point
     idx_max = np.where(p["efficiency"] == p["efficiency"].max())
@@ -739,13 +739,13 @@ def plot_opt_contour(imp, vin, iout, ac, plot_points=100, plot_axes=None):
     ax.set_ylabel("Switch area [mm^2]")
     ax.set_title(
         "Iout = %.2e A, Ac = %.4f mm^2, Eff = %.1f%%"
-        % (iout, ac * 1e6, p["efficiency"].max() * 100)
+        % (iout, area_cap * 1e6, p["efficiency"].max() * 100)
     )
     return ax
 
 
 def plot_regulation(
-    topologies, vin, vout, iout, ac, switches, capacitors, esr=0, idesign=0
+    topologies, vin, vout, iout, area_cap, switches, capacitors, esr=0, idesign=0
 ):
     """
 
@@ -753,7 +753,7 @@ def plot_regulation(
     :param vin: Input voltage of converter (could be a vector)
     :param vout: Output voltage of converter (a vector if Vin is a scalar)
     :param iout: Matching vector of output currents [A]
-    :param ac: Capacitor area constraint (in m^2).  fsw will be swept, Asw will be chosen automatically
+    :param area_cap: Capacitor area constraint (in m^2).  fsw will be swept, Asw will be chosen automatically
     :param switches: a row vector of switch technology structures
     :param capacitors: a row vector of capacitor technology structures
     :param esr: the output-referred constant esr of requisite metal (ie, bondwires).  Default = 0
@@ -786,8 +786,8 @@ def plot_regulation(
         if mode == 2:
             vin_nom = vout / t.ratio
         imp = t.implement(vin_nom, switches, capacitors)
-        [opt_perf, fsw_opt, asw_opt] = imp.optimize_loss(iout, ac)
-        p = imp.evaluate_loss(vin, vout, iout, [], asw_opt, ac)
+        [opt_perf, fsw_opt, asw_opt] = imp.optimize_loss(iout, area_cap)
+        p = imp.evaluate_loss(vin, vout, iout, [], asw_opt, area_cap)
         eff = 100 * p["efficiency"] * p["is_possible"]
         eff[eff == 0] = "nan"  # or use np.nan
         eff_max = np.nanmax(eff)
@@ -905,7 +905,7 @@ if __name__ == "__main__":
     ax8 = plot_opt_contour(imp_stepup_4, 0.25, 10e-3, 1e-6)
 
     # test optimization
-    print(imp_stepdown_1.optimize_loss(iout=1e-3, ac=1e-6))
+    print(imp_stepdown_1.optimize_loss(iout=1e-3, area_cap=1e-6))
 
     topologies = [
         Topology("series-parallel", 1, 3),
