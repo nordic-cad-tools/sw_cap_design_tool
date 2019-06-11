@@ -1,22 +1,22 @@
 language: python
 
-matrix:
-  include:
-    - os: linux
-      sudo: true
+#matrix:
+#  include:
+##    - os: linux
+#      sudo: true
 
-services:
-  - docker
+#services:
+#  - docker
   
-before_install:
-  - echo "before install..."
-  - docker pull schickling/octave
-  - docker run --rm schickling/octave -h
-  - docker ps -a
+#before_install:
+#  - echo "before install..."
+##  - docker pull schickling/octave
+#  - docker run --rm schickling/octave -h
+#  - docker ps -a
   
-addons:
-  apt:
-    update: true
+#addons:
+#  apt:
+#    update: true
     
 python:
   - "3.6"
