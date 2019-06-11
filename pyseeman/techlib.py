@@ -1,4 +1,24 @@
-class ITRS90cap:
+class Capacitor:
+
+    def __init__(self, tech_name, dev_name, capacitance, area, bottom_cap, esr, rating):
+        """
+        :param tech_name: A string name for the technology
+        :param dev_name: A string name for the device
+        :param capacitance: A number for the unit capacitance
+        :param area: A number for the area of a unit (m^2)
+        :param bottom_cap: A number for the bottom plate capacitance per unit
+        :param esr: A number for the ESR
+        :param rating: A number for the voltage rating
+        """
+        self.tech_name = tech_name
+        self.dev_name = dev_name
+        self.capacitance = capacitance
+        self.area = area
+        self.bottom_cap = bottom_cap
+        self.esr = esr
+        self.rating = rating
+
+class ITRS90cap(Capacitor):
     """
     90 nm Oxide Capacitors
     """
@@ -12,7 +32,7 @@ class ITRS90cap:
     rating = 1.2
 
 
-class ITRS65cap:
+class ITRS65cap(Capacitor):
     """
     65 nm Oxide Capacitors
     """
@@ -26,7 +46,7 @@ class ITRS65cap:
     rating = 1.2
 
 
-class ITRS45cap:
+class ITRS45cap(Capacitor):
     """
     45 nm Oxide Capacitors
     """
@@ -40,7 +60,7 @@ class ITRS45cap:
     rating = 1.2
 
 
-class ITRS32cap:
+class ITRS32cap(Capacitor):
     """
     32 nm Oxide Capacitors
     """
@@ -54,7 +74,7 @@ class ITRS32cap:
     rating = 1.2
 
 
-class ITRS22cap:
+class ITRS22cap(Capacitor):
     """
     22 nm Oxide Capacitors
     """
@@ -68,7 +88,7 @@ class ITRS22cap:
     rating = 1.2
 
 
-class ITRS16cap:
+class ITRS16cap(Capacitor):
     """
     16 nm Oxide Capacitors
     """
@@ -83,7 +103,7 @@ class ITRS16cap:
 
 
 # TODO check the name and type of that cap
-class HVcap:
+class HVcap(Capacitor):
     """
     16 nm Oxide Capacitors
     """
