@@ -5,6 +5,12 @@
 Python port of Seeman's MATLAB switched capacitor design toolbox.
 The orignal matlab code can be found at [Mike Seeman's website](http://www.mikeseeman.com/)
 
+## Install with pip
+
+```
+pip git+https://github.com/nordic-cad-tools/sw_cap_design_tool.git
+```
+
 ## Checking syntax with Black
 
 ```
