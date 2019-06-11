@@ -1,32 +1,11 @@
 language: python
 
-
-#matrix:
-#  include:
-##    - os: linux
-#      sudo: true
-
-#services:
-#  - docker
-  
-#before_install:
-#  - echo "before install..."
-##  - docker pull schickling/octave
-#  - docker run --rm schickling/octave -h
-#  - docker ps -a
-  
-#addons:
-#  apt:
-#    update: true
-    
-python:
-  - "3.6"
 # command to install dependencies
 install:
   - pip install -r requirements.txt
-# command to run tests
-#script:
-#  - pytest
+  
+stages:
+  - name: syntax checking
 
 jobs:
   include:
