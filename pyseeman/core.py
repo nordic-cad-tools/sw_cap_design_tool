@@ -3,24 +3,32 @@ from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 import copy
 
+
 def fibfun(n):
-    if n<0:
+    if n < 0:
         raise ValueError("Invalid argument for fibfun")
     elif n == 1:
         return 0
     elif n == 2:
         return 1
     else:
-        return fibfun(n-1) + fibfun(n-2)
+        return fibfun(n - 1) + fibfun(n - 2)
+
 
 class Topology:
 
-    _valid_names = {"ladder", "dickson", "cockcroft-walton",
-                    "doubler", "series-parallel", "fibonacci"}
+    _valid_names = {
+        "ladder",
+        "dickson",
+        "cockcroft-walton",
+        "doubler",
+        "series-parallel",
+        "fibonacci",
+    }
 
     def __init__(self, name, num, den):
         if name.lower() not in self._valid_names:
-                raise ValueError(f"{name} is not a valid name {self._valid_names}")
+            raise ValueError(f"{name} is not a valid name {self._valid_names}")
         self.name = name
         self.num = num
         self.den = den
@@ -37,7 +45,7 @@ class Topology:
             num, den = self.num, self.den
 
         # *************************** SERIES - PARALLEL *******************************#
-        if self.name.lower() == 'series-parallel':
+        if self.name.lower() == "series-parallel":
             n = num
             m = den
             N = n
@@ -79,7 +87,7 @@ class Topology:
                         vrb = np.append(vrb, (i + j - 2) / m)
             ar = np.ones(len(vr)) / m
 
-        elif self.name.lower() == 'ladder':
+        elif self.name.lower() == "ladder":
             n = num
             m = den
             N = n
@@ -109,7 +117,9 @@ class Topology:
         elif self.name.lower() == "dickson":
 
             if den != 1:
-                raise ValueError('SWITCHCAP:nonIntegerRatio the Dickson topology supports integer ratios only')
+                raise ValueError(
+                    "SWITCHCAP:nonIntegerRatio the Dickson topology supports integer ratios only"
+                )
 
             N = num
 
@@ -127,13 +137,21 @@ class Topology:
                 vrb = np.array([0, 1, 0, 1])
             else:
                 vr = np.hstack([np.ones(5), 2 * np.ones(N - 2), 2])
-                ar = np.hstack([np.ones(2) * np.floor((j + 1) / 2.), np.ones(2) * np.floor(j / 2.), np.ones(N)])
+                ar = np.hstack(
+                    [
+                        np.ones(2) * np.floor((j + 1) / 2.0),
+                        np.ones(2) * np.floor(j / 2.0),
+                        np.ones(N),
+                    ]
+                )
                 vrb = np.hstack([np.array([0, 1, 0, 1]), np.ones(N)])
 
         elif self.name.lower() == "cockcroft-walton":
 
             if den != 1:
-                raise ValueError('SWITCHCAP:nonIntegerRatio the Cockcroft-Walton topology supports integer ratios only')
+                raise ValueError(
+                    "SWITCHCAP:nonIntegerRatio the Cockcroft-Walton topology supports integer ratios only"
+                )
 
             N = num
             # SSL values
@@ -142,7 +160,7 @@ class Topology:
             vcb = np.ones(N - 1)
 
             for j in range(1, N):
-                ac = np.append(np.floor((j + 1) / 2.), ac)
+                ac = np.append(np.floor((j + 1) / 2.0), ac)
 
             # FSL values
             if N == 2:
@@ -151,18 +169,28 @@ class Topology:
                 vrb = np.array([0, 1, 0, 1])
             else:
                 vr = np.hstack([np.ones(5), np.ones(N - 2) * 2, 1])
-                ar = np.hstack([np.floor((j + 1) / 2.) * np.ones(2), np.floor(j / 2.) * np.ones(2), np.ones(N)])
+                ar = np.hstack(
+                    [
+                        np.floor((j + 1) / 2.0) * np.ones(2),
+                        np.floor(j / 2.0) * np.ones(2),
+                        np.ones(N),
+                    ]
+                )
                 vrb = np.hstack([np.array([0, 1, 0, 1]), np.ones(N)])
 
         elif self.name.lower() == "doubler":
 
             if den != 1:
-                raise ValueError('SWITCHCAP:nonIntegerRatio the Doubler topology supports integer ratios only')
+                raise ValueError(
+                    "SWITCHCAP:nonIntegerRatio the Doubler topology supports integer ratios only"
+                )
 
             n = np.ceil(np.log2(num)).astype(np.int)
             N = 2 ** n
             if N != num:
-                raise ValueError('SWITCHCAP:badRatio the Doubler topology supports conversion ratios ~ 2^n')
+                raise ValueError(
+                    "SWITCHCAP:badRatio the Doubler topology supports conversion ratios ~ 2^n"
+                )
 
             # SSL values
             ac = np.array([])
@@ -170,9 +198,9 @@ class Topology:
             vcb = np.array([])
 
             for j in range(1, 2 * n):
-                ac = np.append(2 ** np.floor((j - 1) / 2.), ac)
-                vc = np.append(vc, 2 ** np.floor(j / 2.))
-                vcb = np.append(vcb, 2 ** np.floor(j / 2.) * np.mod(j, 2))
+                ac = np.append(2 ** np.floor((j - 1) / 2.0), ac)
+                vc = np.append(vc, 2 ** np.floor(j / 2.0))
+                vcb = np.append(vcb, 2 ** np.floor(j / 2.0) * np.mod(j, 2))
 
             # FSL values
             ar = np.array([])
@@ -186,7 +214,9 @@ class Topology:
 
         elif self.name.lower() == "fibonacci":
             if den != 1:
-                raise ValueError('SWITCHCAP:nonIntegerRatio the Fibonacci topology supports integer ratios only')
+                raise ValueError(
+                    "SWITCHCAP:nonIntegerRatio the Fibonacci topology supports integer ratios only"
+                )
 
             i = 2
 
@@ -194,7 +224,9 @@ class Topology:
                 i = i + 1
 
             if fibfun(i) > num:
-                raise ValueError('SWITCHCAP:badRatio the fibonacci topology supports ratios of F_n or 1/F_n only')
+                raise ValueError(
+                    "SWITCHCAP:badRatio the fibonacci topology supports ratios of F_n or 1/F_n only"
+                )
             N = fibfun(i)
 
             ac = np.array([])
@@ -256,7 +288,7 @@ class Topology:
         pass
 
     def __repr__(self):
-        #return f"<Topology(name={self.name}, ratio={self.ratio})>"
+        # return f"<Topology(name={self.name}, ratio={self.ratio})>"
         my_string = ""
         for k, v in self.__dict__.items():
             my_string += f"{k} = {v}\n"
@@ -264,7 +296,6 @@ class Topology:
 
 
 class Implementation:
-
     def __init__(self, topology, vin, switch_techs, cap_techs, comp_metric=1):
         """
         :param topology:  matches components with switches and components in the topology.
@@ -315,13 +346,17 @@ class Implementation:
                         Cc = C
             # check to make sure a suitable device exists
             if Mc == 0:
-                raise ValueError("No capacitors meet the voltage requirement of: {}".format(vc[i]))
+                raise ValueError(
+                    "No capacitors meet the voltage requirement of: {}".format(vc[i])
+                )
 
             # determine relative device size
             if ac[i] == 0:
                 cap_rel_size = cap_rel_size.append(0)  # avoid divide by 0
             else:
-                cap_rel_size.append((ac[i] * vc[i]) / (np.sqrt(Mc) * cap_assign[i].area))
+                cap_rel_size.append(
+                    (ac[i] * vc[i]) / (np.sqrt(Mc) * cap_assign[i].area)
+                )
 
         # Assign Switches
         for i in range(ar.shape[0]):
@@ -329,13 +364,15 @@ class Implementation:
             Msw = 0
             Csw = 0  # switch cost;
             for j, switch_tech in enumerate(self.switch_techs):
-                if (vr[i] <= switch_tech.drain_rating):
+                if vr[i] <= switch_tech.drain_rating:
                     # Switch could work let's see if it's good
                     if self.comp_metric == 2:  # loss metric
                         # assume full gate drive
-                        C = switch_tech.gate_cap * switch_tech.gate_rating ** 2 + switch_tech.drain_cap * vr[
-                            i] ** 2 + \
-                            switch_tech.body_cap * vrb[i] ** 2
+                        C = (
+                            switch_tech.gate_cap * switch_tech.gate_rating ** 2
+                            + switch_tech.drain_cap * vr[i] ** 2
+                            + switch_tech.body_cap * vrb[i] ** 2
+                        )
                         M = switch_tech.conductance * vr[i] ** 2 / C
                     else:  # area metric
                         C = switch_tech.area
@@ -351,16 +388,22 @@ class Implementation:
 
             # check to make sure a suitable device exists
             if Msw == 0:
-                raise ValueError("No switches meet the voltage requirement of: {}".format(vr[i]))
+                raise ValueError(
+                    "No switches meet the voltage requirement of: {}".format(vr[i])
+                )
 
             # determine relative device size
             if ar[i] == 0:
                 switch_rel_size.append(0)
             else:
                 if self.comp_metric == 2:
-                    switch_rel_size.append(ar[i] * vr[i] / (np.sqrt(Msw) * switch_assign[i].conductance))
+                    switch_rel_size.append(
+                        ar[i] * vr[i] / (np.sqrt(Msw) * switch_assign[i].conductance)
+                    )
                 else:
-                    switch_rel_size.append(ar[i] * vr[i] / (np.sqrt(Msw) * switch_assign[i].area))
+                    switch_rel_size.append(
+                        ar[i] * vr[i] / (np.sqrt(Msw) * switch_assign[i].area)
+                    )
 
         # Scale Caps for unit area:
 
@@ -386,20 +429,19 @@ class Implementation:
         self.cap_size = cap_size
         self.switch_size = switch_size
 
-
     def _expand_input(self, input, maxsize):
         # TODO: Finish this for cases with more dimensions
         if input.shape == (1, 1):
             # Scalar input
-            return input*np.ones(maxsize)
+            return input * np.ones(maxsize)
 
         elif input.shape == (1, maxsize[1]):
             # Row vector input
-            return input*np.ones((maxsize[0], 1))
+            return input * np.ones((maxsize[0], 1))
 
         elif input.shape == (maxsize[0], 1):
             # Column vector input
-            return input*np.ones((1,maxsize[1]))
+            return input * np.ones((1, maxsize[1]))
         elif input.shape == (maxsize[0], maxsize[1]):
             # Input already a properly-sized array
             return input
@@ -409,8 +451,9 @@ class Implementation:
         elif input.shape == (0,):
             raise ValueError("Only fsw or Vout can be empty")
         else:
-            raise ValueError("All inputs must have the same number of rows and columns (if not 1)")
-
+            raise ValueError(
+                "All inputs must have the same number of rows and columns (if not 1)"
+            )
 
     def evaluate_loss(self, Vin, Vout, Iout, fsw, Asw, Ac):
         """
@@ -435,44 +478,43 @@ class Implementation:
 
         # If scalar or 1D array convert to 2D row vector
         if Vin.ndim == 0:
-            Vin = Vin.reshape((1,1))
+            Vin = Vin.reshape((1, 1))
         elif Vin.ndim == 1:
-            Vin = Vin.reshape((1,Vin.shape[0]))
+            Vin = Vin.reshape((1, Vin.shape[0]))
 
         if Vout.ndim == 0:
-            Vout = Vout.reshape((1,1))
+            Vout = Vout.reshape((1, 1))
         elif Vout.ndim == 1:
-            Vout = Vout.reshape((1,Vout.shape[0]))
+            Vout = Vout.reshape((1, Vout.shape[0]))
 
         if Iout.ndim == 0:
-            Iout = Iout.reshape((1,1))
+            Iout = Iout.reshape((1, 1))
         elif Iout.ndim == 1:
-            Iout = Iout.reshape((1,Iout.shape[0]))
+            Iout = Iout.reshape((1, Iout.shape[0]))
 
         if fsw.ndim == 0:
-            fsw = fsw.reshape((1,1))
+            fsw = fsw.reshape((1, 1))
         elif fsw.ndim == 1:
-            fsw = fsw.reshape((1,fsw.shape[0]))
+            fsw = fsw.reshape((1, fsw.shape[0]))
 
         if Asw.ndim == 0:
-            Asw = Asw.reshape((1,1))
+            Asw = Asw.reshape((1, 1))
         elif Asw.ndim == 1:
-            Asw = Asw.reshape((1,Asw.shape[0]))
+            Asw = Asw.reshape((1, Asw.shape[0]))
 
         if Ac.ndim == 0:
-            Ac = Ac.reshape((1,1))
+            Ac = Ac.reshape((1, 1))
         elif Ac.ndim == 1:
-            Ac = Ac.reshape((1,Ac.shape[0]))
-
+            Ac = Ac.reshape((1, Ac.shape[0]))
 
         # Break out components of topology structure
         ratio = self.topology.ratio
         ac = self.topology.ac
         ar = self.topology.ar
-        vc = self.topology.vc# * self.vin
-        vr = self.topology.vr# * self.vin
-        vcb = self.topology.vcb# * self.vin
-        vrb = self.topology.vrb# * self.vin
+        vc = self.topology.vc  # * self.vin
+        vr = self.topology.vr  # * self.vin
+        vcb = self.topology.vcb  # * self.vin
+        vrb = self.topology.vrb  # * self.vin
 
         caps = self.capacitors
         cap_size = self.cap_size
@@ -485,9 +527,11 @@ class Implementation:
         # If two inputs are given as a row and column vector, respectively,
         # then expand inputs to 2D arrays.
 
-        eval_type = 0 # 0: undefined, 1: vout, 2: fsw
+        eval_type = 0  # 0: undefined, 1: vout, 2: fsw
 
-        paramdim = np.max([Vin.shape, Vout.shape, Iout.shape, fsw.shape, Asw.shape, Ac.shape], axis = 0)
+        paramdim = np.max(
+            [Vin.shape, Vout.shape, Iout.shape, fsw.shape, Asw.shape, Ac.shape], axis=0
+        )
         Vin = self._expand_input(Vin, paramdim)
 
         # If Vout is empty, then evaluate to find Vout
@@ -502,7 +546,7 @@ class Implementation:
         # If fsw is empty then evaluate to find fsw
         if fsw.size == 0:
             if eval_type == 1:
-                raise ValueError('Both fsw and Vout cannot be undefined')
+                raise ValueError("Both fsw and Vout cannot be undefined")
             else:
                 eval_type = 2
                 fsw = np.zeros(paramdim)
@@ -512,76 +556,72 @@ class Implementation:
         Asw = self._expand_input(Asw, paramdim)
         Ac = self._expand_input(Ac, paramdim)
 
-        #********************** Start analysis ***********************#
+        # ********************** Start analysis ***********************#
         # Calculate SSL output resistance
         Rssl_alpha = 0
 
         for i in range(len(caps)):
             if ac[i] > 0:
-                Rssl_alpha += ac[i]**2/(caps[i].capacitance*cap_size[i])
-
+                Rssl_alpha += ac[i] ** 2 / (caps[i].capacitance * cap_size[i])
 
         # Calculate FSL output resistance
         Rfsl_alpha = 0
 
         for i in range(len(switches)):
             if ar[i] > 0:
-                Rfsl_alpha += 2*ar[i]**2/(switches[i].conductance*sw_size[i])
-        Rfsl = Rfsl_alpha/Asw
-
+                Rfsl_alpha += 2 * ar[i] ** 2 / (switches[i].conductance * sw_size[i])
+        Rfsl = Rfsl_alpha / Asw
 
         # Calculate ESR loss
         Resr_alpha = 0
 
         for i in range(len(caps)):
             if ac[i] > 0:
-                Resr_alpha += 4*ac[i]**2*caps[i].esr/cap_size[i]
-        Resr = Resr_alpha/Ac
-        if hasattr(self, 'esr'):
+                Resr_alpha += 4 * ac[i] ** 2 * caps[i].esr / cap_size[i]
+        Resr = Resr_alpha / Ac
+        if hasattr(self, "esr"):
             Resr += self.esr
-
 
         # Calculate the unknown variable
         if eval_type == 1:
             # Vout is unknown
-            Rssl = Rssl_alpha/(fsw*Ac)
+            Rssl = Rssl_alpha / (fsw * Ac)
 
             # Calculate total output resistance
-            Rout = np.sqrt(Rssl**2 + (Rfsl + Resr)**2)
-            Vout = Vin*ratio - Rout*Iout
-            Pout = Vout*Iout
+            Rout = np.sqrt(Rssl ** 2 + (Rfsl + Resr) ** 2)
+            Vout = Vin * ratio - Rout * Iout
+            Pout = Vout * Iout
             is_prac = np.ones(paramdim)
 
         elif eval_type == 2:
             # fsw is unknown
-#           # Calculate needed output resistance and switching frequency to match
+            #           # Calculate needed output resistance and switching frequency to match
             # output voltage
             # is_prac is 1 if a finite fsw that satisfies Iout, Vin, Vout exists
 
-            Rreq = (Vin*ratio - Vout)/Iout
-            is_prac = ((Rreq > 0) & (Rfsl + Resr < Rreq))*1.0
-            Rssl = np.real(np.sqrt(Rreq**2 - (Rfsl + Resr)**2))
-            fsw = Rssl_alpha/(Rssl*Ac)
+            Rreq = (Vin * ratio - Vout) / Iout
+            is_prac = ((Rreq > 0) & (Rfsl + Resr < Rreq)) * 1.0
+            Rssl = np.real(np.sqrt(Rreq ** 2 - (Rfsl + Resr) ** 2))
+            fsw = Rssl_alpha / (Rssl * Ac)
 
             # Calculate total output resistance
-            Rout = np.sqrt(Rssl**2 + (Rfsl + Resr)**2)
-            Pout = Vout*Iout
+            Rout = np.sqrt(Rssl ** 2 + (Rfsl + Resr) ** 2)
+            Pout = Vout * Iout
         else:
             raise ValueError("Either Vout or fsw must be []")
 
-
         # Calculate resistance losses
-        Pssl = Rssl*Iout**2
-        Pfsl = Rfsl*Iout**2
-        Pesr = Resr*Iout**2
-        Pres = Rout*Iout**2
+        Pssl = Rssl * Iout ** 2
+        Pfsl = Rfsl * Iout ** 2
+        Pesr = Resr * Iout ** 2
+        Pres = Rout * Iout ** 2
 
         # Calculate cap related parasitic loss
         Pc_alpha = 0
         for i in range(len(caps)):
-            Pc_alpha += caps[i].bottom_cap*cap_size[i]*vcb[i]**2
+            Pc_alpha += caps[i].bottom_cap * cap_size[i] * vcb[i] ** 2
 
-        Pc = Pc_alpha*fsw*Ac*Vin**2
+        Pc = Pc_alpha * fsw * Ac * Vin ** 2
 
         # Calculate switch related parasitic loss
         Psw_alpha = 0
@@ -589,18 +629,20 @@ class Implementation:
         for i in range(len(switches)):
             # Assume switch is driven at full gate_rating voltage
             Vgssw = switches[i].gate_rating
-            Pg_alpha += switches[i].gate_cap*sw_size[i]*Vgssw**2
-            Psw_alpha += switches[i].drain_cap*sw_size[i]*vr[i]**2 + \
-            switches[i].body_cap*sw_size[i]*vrb[i]**2
-        Psw = (Psw_alpha*Vin**2 + Pg_alpha)*fsw*Asw
+            Pg_alpha += switches[i].gate_cap * sw_size[i] * Vgssw ** 2
+            Psw_alpha += (
+                switches[i].drain_cap * sw_size[i] * vr[i] ** 2
+                + switches[i].body_cap * sw_size[i] * vrb[i] ** 2
+            )
+        Psw = (Psw_alpha * Vin ** 2 + Pg_alpha) * fsw * Asw
 
         # Calculate total loss, efficiency, etc.
         Ploss = Pres + Pc + Psw
-        eff = Pout/(Pout + Ploss)
+        eff = Pout / (Pout + Ploss)
 
         # Find dominant loss
-        loss_arr = np.dstack((Pssl,Pfsl,Pesr,Pc,Psw))
-        dominant_loss_args = np.argmax(loss_arr, axis = 2)
+        loss_arr = np.dstack((Pssl, Pfsl, Pesr, Pc, Psw))
+        dominant_loss_args = np.argmax(loss_arr, axis=2)
         texts = ["SSL Loss", "FSL Loss", "ESR Loss", "Bottom-plate", "Switch Parasitic"]
 
         # Pack performance parameters
@@ -614,10 +656,11 @@ class Implementation:
         performance["total_loss"] = Ploss
         performance["impedance"] = Rout
         performance["dominant_loss"] = dominant_loss_args
-        performance["dominant_text"] = [[texts[x] for x in row] for row in dominant_loss_args]
+        performance["dominant_text"] = [
+            [texts[x] for x in row] for row in dominant_loss_args
+        ]
 
         return performance
-
 
     def optimize_loss(self, iout, ac):
         """
@@ -626,24 +669,27 @@ class Implementation:
         :param ac: capacitor area [m^2]
         :return:
         """
-        opt_func = lambda x: self.evaluate_loss(Vin=self.vin, Vout=[], Iout=iout, fsw=np.exp(x[0]), Asw=np.exp(x[1]), Ac=ac)["total_loss"]
+        opt_func = lambda x: self.evaluate_loss(
+            Vin=self.vin, Vout=[], Iout=iout, fsw=np.exp(x[0]), Asw=np.exp(x[1]), Ac=ac
+        )["total_loss"]
         x0 = np.array([10, -10])
         result = minimize(opt_func, x0, bounds=((1, 100), (-100, 1)), tol=1e-12)
-        if result['success'] is not True:
+        if result["success"] is not True:
             raise RuntimeError("optimization is not sucessfull")
-        performance = self.evaluate_loss(self.vin, [], iout, np.exp(result.x[0]), np.exp(result.x[1]), ac)
+        performance = self.evaluate_loss(
+            self.vin, [], iout, np.exp(result.x[0]), np.exp(result.x[1]), ac
+        )
         return performance, np.exp(result.x[0]), np.exp(result.x[1])
 
-
     def __repr__(self):
-        #return f"<Topology(name={self.name}, ratio={self.ratio})>"
+        # return f"<Topology(name={self.name}, ratio={self.ratio})>"
         my_string = ""
         for k, v in self.__dict__.items():
             my_string += f"{k} = {v}\n"
         return my_string
 
 
-def plot_opt_contour(imp, Vin, Iout, Ac, plot_points = 100, plot_axes = None):
+def plot_opt_contour(imp, Vin, Iout, Ac, plot_points=100, plot_axes=None):
     """
     Create efficiency contour plot of efficiency
     :param imp: implementation object
@@ -659,14 +705,16 @@ def plot_opt_contour(imp, Vin, Iout, Ac, plot_points = 100, plot_axes = None):
 
     # Define plot region around the optimum
     if plot_axes is None:
-        fsw_min = np.floor(np.log10(fsw_opt)-1)
-        fsw_max = np.ceil(np.log10(fsw_opt)+1)
-        Asw_min = np.floor(np.log10(Asw_opt)-1)
-        Asw_max = np.ceil(np.log10(Asw_opt)+1)
+        fsw_min = np.floor(np.log10(fsw_opt) - 1)
+        fsw_max = np.ceil(np.log10(fsw_opt) + 1)
+        Asw_min = np.floor(np.log10(Asw_opt) - 1)
+        Asw_max = np.ceil(np.log10(Asw_opt) + 1)
 
     # Generate plot mesh and evaluate performance
-    fsw, Asw = np.meshgrid(np.logspace(fsw_min,fsw_max,plot_points),
-                       np.logspace(Asw_min,Asw_max,plot_points))
+    fsw, Asw = np.meshgrid(
+        np.logspace(fsw_min, fsw_max, plot_points),
+        np.logspace(Asw_min, Asw_max, plot_points),
+    )
     p = imp.evaluate_loss(Vin, [], Iout, fsw, Asw, Ac)
 
     # Find indices of optimum point
@@ -674,19 +722,31 @@ def plot_opt_contour(imp, Vin, Iout, Ac, plot_points = 100, plot_axes = None):
 
     # Plot contours, maximum point, and dominant loss regions
     fig, ax = plt.subplots()
-    ax.contour(fsw, Asw*1e+6, p["dominant_loss"], [0.5, 1.5, 2.5, 3.5], colors="grey")
-    cs_eff = ax.contour(fsw, Asw*1e+6, p["efficiency"],[.05,.1,.2,.4,.6,.7,.8,.85,.9,.92,.94,.96,.98,1])
+    ax.contour(fsw, Asw * 1e6, p["dominant_loss"], [0.5, 1.5, 2.5, 3.5], colors="grey")
+    cs_eff = ax.contour(
+        fsw,
+        Asw * 1e6,
+        p["efficiency"],
+        [0.05, 0.1, 0.2, 0.4, 0.6, 0.7, 0.8, 0.85, 0.9, 0.92, 0.94, 0.96, 0.98, 1],
+    )
     ax.set_xscale("log")
     ax.set_yscale("log")
-    ax.loglog(fsw[idx_max], Asw[idx_max]*1e+6, marker="*", color="black", markersize=20)
+    ax.loglog(
+        fsw[idx_max], Asw[idx_max] * 1e6, marker="*", color="black", markersize=20
+    )
     ax.clabel(cs_eff, inline=True, fontsize=10, inline_spacing=1)
     ax.set_xlabel("Switching frequency [Hz]")
     ax.set_ylabel("Switch area [mm^2]")
-    ax.set_title("Iout = %.2e A, Ac = %.4f mm^2, Eff = %.1f%%" % (Iout, Ac*1e+6, p["efficiency"].max()*100))
+    ax.set_title(
+        "Iout = %.2e A, Ac = %.4f mm^2, Eff = %.1f%%"
+        % (Iout, Ac * 1e6, p["efficiency"].max() * 100)
+    )
     return ax
 
 
-def plot_regulation(topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0, idesign=0):
+def plot_regulation(
+    topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0, idesign=0
+):
     """
 
     :param topologies: A matrix of topologies and ratios
@@ -710,8 +770,8 @@ def plot_regulation(topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0
         title = f"Regulation @Vout={Vout}"
 
     if isinstance(Vin, (int, float)):
-        if (mode == 2):
-            raise RuntimeError('Cannot sweep both Vin and Vout')
+        if mode == 2:
+            raise RuntimeError("Cannot sweep both Vin and Vout")
         mode = 1
         indim = len(Vout)
         xval = Vout
@@ -719,7 +779,6 @@ def plot_regulation(topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0
         xlabel = "Output Voltage [V]"
         xlim = (Vout.min(), Vout.max())
         title = f"Regulation @Vin={Vin}"
-
 
     numtops = len(topologies)
 
@@ -730,33 +789,45 @@ def plot_regulation(topologies, Vin, Vout, Iout, Ac, switches, capacitors, esr=0
     RATIO = []
     FSW = []
 
-
-
     fig, ax = plt.subplots()
 
     for i, t in enumerate(topologies):
         if mode == 2:
-            Vin_nom = Vout/t.ratio
+            Vin_nom = Vout / t.ratio
         imp = t.implement(Vin_nom, switches, capacitors)
         [opt_perf, fsw_opt, Asw_opt] = imp.optimize_loss(Iout, Ac)
         p = imp.evaluate_loss(Vin, Vout, Iout, [], Asw_opt, Ac)
-        EFF = 100*p["efficiency"] * p["is_possible"]
-        EFF[EFF == 0] = 'nan'  # or use np.nan
+        EFF = 100 * p["efficiency"] * p["is_possible"]
+        EFF[EFF == 0] = "nan"  # or use np.nan
         eff_max = np.nanmax(EFF)
         x_eff_max = np.nanargmax(EFF)
         if mode == 1:
             VOUT = p["Vout"] * p["is_possible"]
 
-            eff_trace, = ax.plot(np.squeeze(VOUT), np.squeeze(EFF), label=f'{t.num}:{t.den}')
-            ax.plot(np.squeeze(VOUT)[x_eff_max], eff_max, marker="o", color=eff_trace.get_color())
+            eff_trace, = ax.plot(
+                np.squeeze(VOUT), np.squeeze(EFF), label=f"{t.num}:{t.den}"
+            )
+            ax.plot(
+                np.squeeze(VOUT)[x_eff_max],
+                eff_max,
+                marker="o",
+                color=eff_trace.get_color(),
+            )
         if mode == 2:
-            eff_trace, = ax.plot(np.squeeze(Vin), np.squeeze(EFF), label=f'{t.num}:{t.den}')
-            ax.plot(np.squeeze(Vin)[x_eff_max], eff_max, marker="o", color=eff_trace.get_color())
+            eff_trace, = ax.plot(
+                np.squeeze(Vin), np.squeeze(EFF), label=f"{t.num}:{t.den}"
+            )
+            ax.plot(
+                np.squeeze(Vin)[x_eff_max],
+                eff_max,
+                marker="o",
+                color=eff_trace.get_color(),
+            )
 
-
-    ax.set(xlabel=xlabel, ylabel='Efficiency [%]', title=title, xlim=xlim)
+    ax.set(xlabel=xlabel, ylabel="Efficiency [%]", title=title, xlim=xlim)
     ax.grid()
     ax.legend()
+
 
 def cascade_topologies(topology1, topology2):
     """
@@ -772,17 +843,18 @@ def cascade_topologies(topology1, topology2):
     ratio2 = topology2.ratio
 
     casc_top.name = topology1.name + "->" + topology2.name
-    casc_top.ac = np.hstack([topology1.ac*ratio2, topology2.ac])
-    casc_top.ar = np.hstack([topology1.ar*ratio2, topology2.ar])
-    casc_top.vc = np.hstack([topology1.vc, topology2.vc*ratio1])
-    casc_top.vcb = np.hstack([topology1.vcb, topology2.vcb*ratio1])
-    casc_top.vr = np.hstack([topology1.vr, topology2.vr*ratio1])
-    casc_top.vrb = np.hstack([topology1.vrb, topology2.vrb*ratio1])
-    casc_top.ratio = ratio1*ratio2
-    casc_top.Mssl = 2*casc_top.ratio**2/(np.sum(casc_top.ac*casc_top.vc))**2
-    casc_top.Mfsl = casc_top.ratio**2/(2*np.sum(casc_top.ar*casc_top.vr))**2
+    casc_top.ac = np.hstack([topology1.ac * ratio2, topology2.ac])
+    casc_top.ar = np.hstack([topology1.ar * ratio2, topology2.ar])
+    casc_top.vc = np.hstack([topology1.vc, topology2.vc * ratio1])
+    casc_top.vcb = np.hstack([topology1.vcb, topology2.vcb * ratio1])
+    casc_top.vr = np.hstack([topology1.vr, topology2.vr * ratio1])
+    casc_top.vrb = np.hstack([topology1.vrb, topology2.vrb * ratio1])
+    casc_top.ratio = ratio1 * ratio2
+    casc_top.Mssl = 2 * casc_top.ratio ** 2 / (np.sum(casc_top.ac * casc_top.vc)) ** 2
+    casc_top.Mfsl = casc_top.ratio ** 2 / (2 * np.sum(casc_top.ar * casc_top.vr)) ** 2
 
     return casc_top
+
 
 def permute_topologies(topologies1, topologies2):
     """
@@ -801,7 +873,7 @@ def permute_topologies(topologies1, topologies2):
             top1 = topologies1[m]
             top2 = topologies2[n]
 
-            newtops.append(cascade_topologies(top1,top2))
+            newtops.append(cascade_topologies(top1, top2))
 
     return newtops
 
@@ -843,10 +915,12 @@ if __name__ == "__main__":
     # test optimization
     print(imp_stepdown_1.optimize_loss(iout=1e-3, ac=1e-6))
 
-    topologies = [Topology("series-parallel", 1, 3),
-                  Topology("series-parallel", 1, 2),
-                  Topology("series-parallel", 2, 3),
-                  Topology("series-parallel", 4, 5)]
+    topologies = [
+        Topology("series-parallel", 1, 3),
+        Topology("series-parallel", 1, 2),
+        Topology("series-parallel", 2, 3),
+        Topology("series-parallel", 4, 5),
+    ]
 
     # Test Vout sweep
     Vout = np.linspace(0, 1.2, 1000).reshape((1, 1000))
