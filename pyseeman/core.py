@@ -530,7 +530,15 @@ class Implementation:
         eval_type = 0  # 0: undefined, 1: vout, 2: fsw
 
         paramdim = np.max(
-            [vin.shape, vout.shape, iout.shape, fsw.shape, area_sw.shape, area_cap.shape], axis=0
+            [
+                vin.shape,
+                vout.shape,
+                iout.shape,
+                fsw.shape,
+                area_sw.shape,
+                area_cap.shape,
+            ],
+            axis=0,
         )
         vin = self._expand_input(vin, paramdim)
 
@@ -670,7 +678,12 @@ class Implementation:
         :return:
         """
         opt_func = lambda x: self.evaluate_loss(
-            vin=self.vin, vout=[], iout=iout, fsw=np.exp(x[0]), area_sw=np.exp(x[1]), area_cap=area_cap
+            vin=self.vin,
+            vout=[],
+            iout=iout,
+            fsw=np.exp(x[0]),
+            area_sw=np.exp(x[1]),
+            area_cap=area_cap,
         )["total_loss"]
         x0 = np.array([10, -10])
         result = minimize(opt_func, x0, bounds=((1, 100), (-100, 1)), tol=1e-12)
