@@ -1,5 +1,4 @@
 class Capacitor:
-
     def __init__(self, tech_name, dev_name, capacitance, area, bottom_cap, esr, rating):
         """
         :param tech_name: A string name for the technology
@@ -17,6 +16,42 @@ class Capacitor:
         self.bottom_cap = bottom_cap
         self.esr = esr
         self.rating = rating
+
+
+class Switch:
+    def __init__(
+        self,
+        tech_name,
+        dev_name,
+        area,
+        conductance,
+        gate_rating,
+        drain_rating,
+        gate_cap,
+        drain_cap,
+        body_cap,
+    ):
+        """
+        :param tech_name: A string name for the technology
+        :param dev_name: A string name for the device
+        :param area: A number for the area of a unit (m^2)
+        :param conductance: A number for the conductance of a unit (S)
+        :param gate_rating: A number for the gate voltage rating
+        :param drain_rating: A number for the drain voltage rating
+        :param gate_cap: A number for the gate capacitance per unit
+        :param drain_cap: A number for the drain capacitance per unit
+        :param body_cap: A number for the body capacitance per unit
+        """
+        self.tech_name = tech_name
+        self.dev_name = dev_name
+        self.area = area
+        self.conductance = conductance
+        self.gate_rating = gate_rating
+        self.drain_rating = drain_rating
+        self.gate_cap = gate_cap
+        self.drain_cap = drain_cap
+        self.body_cap = body_cap
+
 
 class ITRS90cap(Capacitor):
     """
@@ -117,7 +152,7 @@ class HVcap(Capacitor):
     rating = 12
 
 
-class ITRS90sw:
+class ITRS90sw(Switch):
     """
     90 nm switch
     """
@@ -133,7 +168,7 @@ class ITRS90sw:
     body_cap = 0.2 * gate_cap
 
 
-class ITRS65sw:
+class ITRS65sw(Switch):
     """
     65 nm switch
     """
@@ -149,7 +184,7 @@ class ITRS65sw:
     body_cap = 0.2 * gate_cap
 
 
-class ITRS45sw:
+class ITRS45sw(Switch):
     """
     45 nm switch
     """
@@ -165,7 +200,7 @@ class ITRS45sw:
     body_cap = 0.2 * gate_cap
 
 
-class ITRS32sw:
+class ITRS32sw(Switch):
     """
     32 nm switch
     """
@@ -181,7 +216,7 @@ class ITRS32sw:
     body_cap = 0.2 * gate_cap
 
 
-class ITRS22sw:
+class ITRS22sw(Switch):
     """
     22 nm switch
     """
@@ -197,7 +232,7 @@ class ITRS22sw:
     body_cap = 0.2 * gate_cap
 
 
-class ITRS16sw:
+class ITRS16sw(Switch):
     """
     16 nm switch
     """
