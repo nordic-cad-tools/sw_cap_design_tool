@@ -455,7 +455,7 @@ class Implementation:
                 "All inputs must have the same number of rows and columns (if not 1)"
             )
 
-    def evaluate_loss(self, Vin, Vout, Iout, fsw, Asw, Ac):
+    def evaluate_loss(self, vin, vout, iout, fsw, asw, Ac):
         """
         Evaluate_loss: evaluates the loss and other peformance metrics for a
         specific size and operating condition of a implemented SC converter
@@ -469,38 +469,38 @@ class Implementation:
         """
 
         # Converter to numpy arrays
-        Vin = np.asarray(Vin)
-        Vout = np.asarray(Vout)
-        Iout = np.asarray(Iout)
+        vin = np.asarray(vin)
+        vout = np.asarray(vout)
+        iout = np.asarray(iout)
         fsw = np.asarray(fsw)
-        Asw = np.asarray(Asw)
+        asw = np.asarray(asw)
         Ac = np.asarray(Ac)
 
         # If scalar or 1D array convert to 2D row vector
-        if Vin.ndim == 0:
-            Vin = Vin.reshape((1, 1))
-        elif Vin.ndim == 1:
-            Vin = Vin.reshape((1, Vin.shape[0]))
+        if vin.ndim == 0:
+            vin = vin.reshape((1, 1))
+        elif vin.ndim == 1:
+            vin = vin.reshape((1, vin.shape[0]))
 
-        if Vout.ndim == 0:
-            Vout = Vout.reshape((1, 1))
-        elif Vout.ndim == 1:
-            Vout = Vout.reshape((1, Vout.shape[0]))
+        if vout.ndim == 0:
+            vout = vout.reshape((1, 1))
+        elif vout.ndim == 1:
+            vout = vout.reshape((1, vout.shape[0]))
 
-        if Iout.ndim == 0:
-            Iout = Iout.reshape((1, 1))
-        elif Iout.ndim == 1:
-            Iout = Iout.reshape((1, Iout.shape[0]))
+        if iout.ndim == 0:
+            iout = iout.reshape((1, 1))
+        elif iout.ndim == 1:
+            iout = iout.reshape((1, iout.shape[0]))
 
         if fsw.ndim == 0:
             fsw = fsw.reshape((1, 1))
         elif fsw.ndim == 1:
             fsw = fsw.reshape((1, fsw.shape[0]))
 
-        if Asw.ndim == 0:
-            Asw = Asw.reshape((1, 1))
-        elif Asw.ndim == 1:
-            Asw = Asw.reshape((1, Asw.shape[0]))
+        if asw.ndim == 0:
+            asw = asw.reshape((1, 1))
+        elif asw.ndim == 1:
+            asw = asw.reshape((1, asw.shape[0]))
 
         if Ac.ndim == 0:
             Ac = Ac.reshape((1, 1))
@@ -530,18 +530,18 @@ class Implementation:
         eval_type = 0  # 0: undefined, 1: vout, 2: fsw
 
         paramdim = np.max(
-            [Vin.shape, Vout.shape, Iout.shape, fsw.shape, Asw.shape, Ac.shape], axis=0
+            [vin.shape, vout.shape, iout.shape, fsw.shape, asw.shape, Ac.shape], axis=0
         )
-        Vin = self._expand_input(Vin, paramdim)
+        vin = self._expand_input(vin, paramdim)
 
         # If Vout is empty, then evaluate to find Vout
-        if Vout.size == 0:
+        if vout.size == 0:
             eval_type = 1
-            Vout = np.zeros(paramdim)
+            vout = np.zeros(paramdim)
         else:
-            Vout = self._expand_input(Vout, paramdim)
+            vout = self._expand_input(vout, paramdim)
 
-        Iout = self._expand_input(Iout, paramdim)
+        iout = self._expand_input(iout, paramdim)
 
         # If fsw is empty then evaluate to find fsw
         if fsw.size == 0:
@@ -553,7 +553,7 @@ class Implementation:
         else:
             fsw = self._expand_input(fsw, paramdim)
 
-        Asw = self._expand_input(Asw, paramdim)
+        asw = self._expand_input(asw, paramdim)
         Ac = self._expand_input(Ac, paramdim)
 
         # ********************** Start analysis ***********************#
@@ -570,7 +570,7 @@ class Implementation:
         for i in range(len(switches)):
             if ar[i] > 0:
                 Rfsl_alpha += 2 * ar[i] ** 2 / (switches[i].conductance * sw_size[i])
-        Rfsl = Rfsl_alpha / Asw
+        Rfsl = Rfsl_alpha / asw
 
         # Calculate ESR loss
         Resr_alpha = 0
@@ -589,8 +589,8 @@ class Implementation:
 
             # Calculate total output resistance
             Rout = np.sqrt(Rssl ** 2 + (Rfsl + Resr) ** 2)
-            Vout = Vin * ratio - Rout * Iout
-            Pout = Vout * Iout
+            vout = vin * ratio - Rout * iout
+            Pout = vout * iout
             is_prac = np.ones(paramdim)
 
         elif eval_type == 2:
@@ -599,29 +599,29 @@ class Implementation:
             # output voltage
             # is_prac is 1 if a finite fsw that satisfies Iout, Vin, Vout exists
 
-            Rreq = (Vin * ratio - Vout) / Iout
+            Rreq = (vin * ratio - vout) / iout
             is_prac = ((Rreq > 0) & (Rfsl + Resr < Rreq)) * 1.0
             Rssl = np.real(np.sqrt(Rreq ** 2 - (Rfsl + Resr) ** 2))
             fsw = Rssl_alpha / (Rssl * Ac)
 
             # Calculate total output resistance
             Rout = np.sqrt(Rssl ** 2 + (Rfsl + Resr) ** 2)
-            Pout = Vout * Iout
+            Pout = vout * iout
         else:
             raise ValueError("Either Vout or fsw must be []")
 
         # Calculate resistance losses
-        Pssl = Rssl * Iout ** 2
-        Pfsl = Rfsl * Iout ** 2
-        Pesr = Resr * Iout ** 2
-        Pres = Rout * Iout ** 2
+        Pssl = Rssl * iout ** 2
+        Pfsl = Rfsl * iout ** 2
+        Pesr = Resr * iout ** 2
+        Pres = Rout * iout ** 2
 
         # Calculate cap related parasitic loss
         Pc_alpha = 0
         for i in range(len(caps)):
             Pc_alpha += caps[i].bottom_cap * cap_size[i] * vcb[i] ** 2
 
-        Pc = Pc_alpha * fsw * Ac * Vin ** 2
+        Pc = Pc_alpha * fsw * Ac * vin ** 2
 
         # Calculate switch related parasitic loss
         Psw_alpha = 0
@@ -634,7 +634,7 @@ class Implementation:
                 switches[i].drain_cap * sw_size[i] * vr[i] ** 2
                 + switches[i].body_cap * sw_size[i] * vrb[i] ** 2
             )
-        Psw = (Psw_alpha * Vin ** 2 + Pg_alpha) * fsw * Asw
+        Psw = (Psw_alpha * vin ** 2 + Pg_alpha) * fsw * asw
 
         # Calculate total loss, efficiency, etc.
         Ploss = Pres + Pc + Psw
@@ -649,7 +649,7 @@ class Implementation:
         # TODO: Decide whether we should use something else than a dict here
 
         performance = {}
-        performance["Vout"] = Vout
+        performance["Vout"] = vout
         performance["fsw"] = fsw
         performance["is_possible"] = is_prac
         performance["efficiency"] = eff
@@ -670,7 +670,7 @@ class Implementation:
         :return:
         """
         opt_func = lambda x: self.evaluate_loss(
-            Vin=self.vin, Vout=[], Iout=iout, fsw=np.exp(x[0]), Asw=np.exp(x[1]), Ac=ac
+            vin=self.vin, vout=[], iout=iout, fsw=np.exp(x[0]), asw=np.exp(x[1]), Ac=ac
         )["total_loss"]
         x0 = np.array([10, -10])
         result = minimize(opt_func, x0, bounds=((1, 100), (-100, 1)), tol=1e-12)
