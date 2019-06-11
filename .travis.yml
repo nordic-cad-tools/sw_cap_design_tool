@@ -1,5 +1,6 @@
 language: python
 
+
 #matrix:
 #  include:
 ##    - os: linux
@@ -26,3 +27,9 @@ install:
 # command to run tests
 #script:
 #  - pytest
+
+jobs:
+  include:
+    - stage: syntax checking
+    - script: black --check .
+    
