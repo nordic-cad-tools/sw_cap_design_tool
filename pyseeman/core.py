@@ -694,6 +694,9 @@ class Implementation:
         )
         return performance, np.exp(result.x[0]), np.exp(result.x[1])
 
+    def plot_opt_contour(self, iout, area_cap, plot_points=100, plot_axes=None):
+        return plot_opt_contour(self, self.vin, iout, area_cap, plot_points, plot_axes)
+
     def __repr__(self):
         # return f"<Topology(name={self.name}, ratio={self.ratio})>"
         my_string = ""
