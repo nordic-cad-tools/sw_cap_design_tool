@@ -4,7 +4,7 @@ language: python
 install:
   - pip install -r requirements.txt
 
-script: python --version
+script: echo "Skip global script..."
 
 stages:
   - name: syntax checking
@@ -12,5 +12,6 @@ stages:
 jobs:
   include:
     - stage: syntax checking
-    - script: black --check .
+    script: 
+    - black --check .
     
