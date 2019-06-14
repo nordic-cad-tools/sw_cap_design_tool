@@ -290,7 +290,6 @@ class Topology:
         pass
 
     def __repr__(self):
-        # return f"<Topology(name={self.name}, ratio={self.ratio})>"
         my_string = ""
         for k, v in self.__dict__.items():
             my_string += f"{k} = {v}\n"
@@ -417,13 +416,9 @@ class Implementation:
 
         # Scale Switches for unit area:
         sw_area = 0
-        # print(switch_rel_size)
         for i in range(ar.shape[0]):
-            #   print(i)
             sw_area = sw_area + switch_rel_size[i] * switch_assign[i].area
 
-        # if sw_area > 0:
-        # print(sw_area)
         switch_size = switch_rel_size / sw_area
 
         self.capacitors = cap_assign
@@ -605,7 +600,7 @@ class Implementation:
 
         elif eval_type == 2:
             # fsw is unknown
-            #           # Calculate needed output resistance and switching frequency to match
+            # Calculate needed output resistance and switching frequency to match
             # output voltage
             # is_prac is 1 if a finite fsw that satisfies Iout, Vin, Vout exists
 
@@ -704,7 +699,6 @@ class Implementation:
         return plot_opt_contour(self, self.vin, iout, area_cap, plot_points, plot_axes)
 
     def __repr__(self):
-        # return f"<Topology(name={self.name}, ratio={self.ratio})>"
         my_string = ""
         for k, v in self.__dict__.items():
             my_string += f"{k} = {v}\n"
