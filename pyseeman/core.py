@@ -2,6 +2,7 @@ import numpy as np
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 import copy
+import warnings
 
 
 def fibfun(n):
@@ -609,7 +610,11 @@ class Implementation:
 
             Rreq = (vin * ratio - vout) / iout
             is_prac = ((Rreq > 0) & (Rfsl + Resr < Rreq)) * 1.0
-            Rssl = np.real(np.sqrt(Rreq ** 2 - (Rfsl + Resr) ** 2))
+
+            # Ignore warning when sqrt of negative returns nan
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", "invalid value encountered in sqrt")
+                Rssl = np.real(np.sqrt(Rreq ** 2 - (Rfsl + Resr) ** 2))
             fsw = Rssl_alpha / (Rssl * area_cap)
 
             # Calculate total output resistance
