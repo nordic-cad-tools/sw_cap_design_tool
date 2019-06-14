@@ -254,8 +254,8 @@ class Topology:
 
         # TODO: Check if it makes sense that M values are claulcated before the flipping
         ratio = num / den
-        Mssl = 2 * ratio ** 2 / np.sum(ac * vc) ** 2
-        Mfsl = ratio ** 2 / (2 * np.sum(ar * vr) ** 2)
+        mssl = 2 * ratio ** 2 / np.sum(ac * vc) ** 2
+        mfsl = ratio ** 2 / (2 * np.sum(ar * vr) ** 2)
 
         if flip == 1:
             ac = ac / ratio
@@ -272,8 +272,8 @@ class Topology:
         self.ar = ar
         self.vr = vr
         self.vrb = vrb
-        self.Mssl = Mssl
-        self.Mfsl = Mfsl
+        self.mssl = mssl
+        self.mfsl = mfsl
         self.ratio = ratio
 
     def implement(self, vin, switch_techs, cap_techs, comp_metric=1):
@@ -329,24 +329,24 @@ class Implementation:
 
         # Assign Capacitors
         for i in range(ac.shape[0]):
-            Mc = 0
-            Cc = 0  # cap cost
+            mc = 0
+            cc = 0  # cap cost
             for j, cap_tech in enumerate(self.cap_techs):
                 if vc[i] <= cap_tech.rating:
                     # Cap could work ... let's see if it's good
                     # Use area-limited metric, which is usually applicable
-                    C = cap_tech.area
-                    M = cap_tech.capacitance * vc[i] ** 2 / C
-                    if M > Mc:
-                        if Mc == 0:
+                    c = cap_tech.area
+                    m = cap_tech.capacitance * vc[i] ** 2 / c
+                    if m > mc:
+                        if mc == 0:
                             cap_assign.append(cap_tech)
                         else:
                             cap_assign.append(cap_tech)
 
-                        Mc = M
-                        Cc = C
+                        mc = m
+                        cc = c
             # check to make sure a suitable device exists
-            if Mc == 0:
+            if mc == 0:
                 raise ValueError(
                     "No capacitors meet the voltage requirement of: {}".format(vc[i])
                 )
@@ -356,39 +356,39 @@ class Implementation:
                 cap_rel_size = cap_rel_size.append(0)  # avoid divide by 0
             else:
                 cap_rel_size.append(
-                    (ac[i] * vc[i]) / (np.sqrt(Mc) * cap_assign[i].area)
+                    (ac[i] * vc[i]) / (np.sqrt(mc) * cap_assign[i].area)
                 )
 
         # Assign Switches
         for i in range(ar.shape[0]):
 
-            Msw = 0
-            Csw = 0  # switch cost;
+            msw = 0
+            csw = 0  # switch cost;
             for j, switch_tech in enumerate(self.switch_techs):
                 if vr[i] <= switch_tech.drain_rating:
                     # Switch could work let's see if it's good
                     if self.comp_metric == 2:  # loss metric
                         # assume full gate drive
-                        C = (
+                        c = (
                             switch_tech.gate_cap * switch_tech.gate_rating ** 2
                             + switch_tech.drain_cap * vr[i] ** 2
                             + switch_tech.body_cap * vrb[i] ** 2
                         )
-                        M = switch_tech.conductance * vr[i] ** 2 / C
+                        m = switch_tech.conductance * vr[i] ** 2 / c
                     else:  # area metric
-                        C = switch_tech.area
-                        M = switch_tech.conductance * vr[i] ** 2 / C
+                        c = switch_tech.area
+                        m = switch_tech.conductance * vr[i] ** 2 / c
 
-                    if M > Msw:
-                        if Msw == 0:
+                    if m > msw:
+                        if msw == 0:
                             switch_assign.append(switch_tech)
                         else:
                             switch_assign[i] = switch_tech
-                        Msw = M
-                        Csw = C
+                        msw = m
+                        csw = c
 
             # check to make sure a suitable device exists
-            if Msw == 0:
+            if msw == 0:
                 raise ValueError(
                     "No switches meet the voltage requirement of: {}".format(vr[i])
                 )
@@ -399,11 +399,11 @@ class Implementation:
             else:
                 if self.comp_metric == 2:
                     switch_rel_size.append(
-                        ar[i] * vr[i] / (np.sqrt(Msw) * switch_assign[i].conductance)
+                        ar[i] * vr[i] / (np.sqrt(msw) * switch_assign[i].conductance)
                     )
                 else:
                     switch_rel_size.append(
-                        ar[i] * vr[i] / (np.sqrt(Msw) * switch_assign[i].area)
+                        ar[i] * vr[i] / (np.sqrt(msw) * switch_assign[i].area)
                     )
 
         # Scale Caps for unit area:
@@ -567,39 +567,39 @@ class Implementation:
 
         # ********************** Start analysis ***********************#
         # Calculate SSL output resistance
-        Rssl_alpha = 0
+        rssl_alpha = 0
 
         for i in range(len(caps)):
             if ac[i] > 0:
-                Rssl_alpha += ac[i] ** 2 / (caps[i].capacitance * cap_size[i])
+                rssl_alpha += ac[i] ** 2 / (caps[i].capacitance * cap_size[i])
 
         # Calculate FSL output resistance
-        Rfsl_alpha = 0
+        rfsl_alpha = 0
 
         for i in range(len(switches)):
             if ar[i] > 0:
-                Rfsl_alpha += 2 * ar[i] ** 2 / (switches[i].conductance * sw_size[i])
-        Rfsl = Rfsl_alpha / area_sw
+                rfsl_alpha += 2 * ar[i] ** 2 / (switches[i].conductance * sw_size[i])
+        rfsl = rfsl_alpha / area_sw
 
         # Calculate ESR loss
-        Resr_alpha = 0
+        resr_alpha = 0
 
         for i in range(len(caps)):
             if ac[i] > 0:
-                Resr_alpha += 4 * ac[i] ** 2 * caps[i].esr / cap_size[i]
-        Resr = Resr_alpha / area_cap
+                resr_alpha += 4 * ac[i] ** 2 * caps[i].esr / cap_size[i]
+        resr = resr_alpha / area_cap
         if hasattr(self, "esr"):
-            Resr += self.esr
+            resr += self.esr
 
         # Calculate the unknown variable
         if eval_type == 1:
             # Vout is unknown
-            Rssl = Rssl_alpha / (fsw * area_cap)
+            rssl = rssl_alpha / (fsw * area_cap)
 
             # Calculate total output resistance
-            Rout = np.sqrt(Rssl ** 2 + (Rfsl + Resr) ** 2)
-            vout = vin * ratio - Rout * iout
-            Pout = vout * iout
+            rout = np.sqrt(rssl ** 2 + (rfsl + resr) ** 2)
+            vout = vin * ratio - rout * iout
+            pout = vout * iout
             is_prac = np.ones(paramdim)
 
         elif eval_type == 2:
@@ -608,53 +608,53 @@ class Implementation:
             # output voltage
             # is_prac is 1 if a finite fsw that satisfies Iout, Vin, Vout exists
 
-            Rreq = (vin * ratio - vout) / iout
-            is_prac = ((Rreq > 0) & (Rfsl + Resr < Rreq)) * 1.0
+            rreq = (vin * ratio - vout) / iout
+            is_prac = ((rreq > 0) & (rfsl + resr < rreq)) * 1.0
 
             # Ignore warning when sqrt of negative returns nan
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", "invalid value encountered in sqrt")
-                Rssl = np.real(np.sqrt(Rreq ** 2 - (Rfsl + Resr) ** 2))
-            fsw = Rssl_alpha / (Rssl * area_cap)
+                rssl = np.real(np.sqrt(rreq ** 2 - (rfsl + resr) ** 2))
+            fsw = rssl_alpha / (rssl * area_cap)
 
             # Calculate total output resistance
-            Rout = np.sqrt(Rssl ** 2 + (Rfsl + Resr) ** 2)
-            Pout = vout * iout
+            rout = np.sqrt(rssl ** 2 + (rfsl + resr) ** 2)
+            pout = vout * iout
         else:
             raise ValueError("Either Vout or fsw must be []")
 
         # Calculate resistance losses
-        Pssl = Rssl * iout ** 2
-        Pfsl = Rfsl * iout ** 2
-        Pesr = Resr * iout ** 2
-        Pres = Rout * iout ** 2
+        pssl = rssl * iout ** 2
+        pfsl = rfsl * iout ** 2
+        pesr = resr * iout ** 2
+        pres = rout * iout ** 2
 
         # Calculate cap related parasitic loss
-        Pc_alpha = 0
+        pc_alpha = 0
         for i in range(len(caps)):
-            Pc_alpha += caps[i].bottom_cap * cap_size[i] * vcb[i] ** 2
+            pc_alpha += caps[i].bottom_cap * cap_size[i] * vcb[i] ** 2
 
-        Pc = Pc_alpha * fsw * area_cap * vin ** 2
+        Pc = pc_alpha * fsw * area_cap * vin ** 2
 
         # Calculate switch related parasitic loss
-        Psw_alpha = 0
-        Pg_alpha = 0
+        psw_alpha = 0
+        pg_alpha = 0
         for i in range(len(switches)):
             # Assume switch is driven at full gate_rating voltage
-            Vgssw = switches[i].gate_rating
-            Pg_alpha += switches[i].gate_cap * sw_size[i] * Vgssw ** 2
-            Psw_alpha += (
+            vgs_sw = switches[i].gate_rating
+            pg_alpha += switches[i].gate_cap * sw_size[i] * vgs_sw ** 2
+            psw_alpha += (
                 switches[i].drain_cap * sw_size[i] * vr[i] ** 2
                 + switches[i].body_cap * sw_size[i] * vrb[i] ** 2
             )
-        Psw = (Psw_alpha * vin ** 2 + Pg_alpha) * fsw * area_sw
+        psw = (psw_alpha * vin ** 2 + pg_alpha) * fsw * area_sw
 
         # Calculate total loss, efficiency, etc.
-        Ploss = Pres + Pc + Psw
-        eff = Pout / (Pout + Ploss)
+        ploss = pres + Pc + psw
+        eff = pout / (pout + ploss)
 
         # Find dominant loss
-        loss_arr = np.dstack((Pssl, Pfsl, Pesr, Pc, Psw))
+        loss_arr = np.dstack((pssl, pfsl, pesr, Pc, psw))
         dominant_loss_args = np.argmax(loss_arr, axis=2)
         texts = ["SSL Loss", "FSL Loss", "ESR Loss", "Bottom-plate", "Switch Parasitic"]
 
@@ -666,8 +666,8 @@ class Implementation:
         performance["fsw"] = fsw
         performance["is_possible"] = is_prac
         performance["efficiency"] = eff
-        performance["total_loss"] = Ploss
-        performance["impedance"] = Rout
+        performance["total_loss"] = ploss
+        performance["impedance"] = rout
         performance["dominant_loss"] = dominant_loss_args
         performance["dominant_text"] = [
             [texts[x] for x in row] for row in dominant_loss_args
@@ -863,8 +863,8 @@ def cascade_topologies(topology1, topology2):
     casc_top.vr = np.hstack([topology1.vr, topology2.vr * ratio1])
     casc_top.vrb = np.hstack([topology1.vrb, topology2.vrb * ratio1])
     casc_top.ratio = ratio1 * ratio2
-    casc_top.Mssl = 2 * casc_top.ratio ** 2 / (np.sum(casc_top.ac * casc_top.vc)) ** 2
-    casc_top.Mfsl = casc_top.ratio ** 2 / (2 * np.sum(casc_top.ar * casc_top.vr)) ** 2
+    casc_top.mssl = 2 * casc_top.ratio ** 2 / (np.sum(casc_top.ac * casc_top.vc)) ** 2
+    casc_top.mfsl = casc_top.ratio ** 2 / (2 * np.sum(casc_top.ar * casc_top.vr)) ** 2
 
     return casc_top
 
