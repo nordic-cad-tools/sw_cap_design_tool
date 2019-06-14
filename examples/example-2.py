@@ -13,7 +13,7 @@ topologies = [
 ]
 
 # vout sweep
-vout = np.linspace(0, 1.2, 1000).reshape((1, 1000))
+vout = np.linspace(0, 1.2, 1000)
 plot_regulation(topologies, 1.2, vout, 500e-3, 1e-7, [ITRS16sw], [ITRS16cap])
 
 # vin sweep
