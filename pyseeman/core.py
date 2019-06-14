@@ -253,7 +253,6 @@ class Topology:
         else:
             raise ValueError("Topology type not implemented yet")
 
-        # TODO: Check if it makes sense that M values are claulcated before the flipping
         ratio = num / den
         mssl = 2 * ratio ** 2 / np.sum(ac * vc) ** 2
         mfsl = ratio ** 2 / (2 * np.sum(ar * vr) ** 2)
@@ -427,7 +426,6 @@ class Implementation:
         self.switch_size = switch_size
 
     def _expand_input(self, input, maxsize):
-        # TODO: Finish this for cases with more dimensions
         if input.shape == (1, 1):
             # Scalar input
             return input * np.ones(maxsize)
@@ -655,7 +653,6 @@ class Implementation:
         texts = ["SSL Loss", "FSL Loss", "ESR Loss", "Bottom-plate", "Switch Parasitic"]
 
         # Pack performance parameters
-        # TODO: Decide whether we should use something else than a dict here
 
         performance = {}
         performance["Vout"] = vout
