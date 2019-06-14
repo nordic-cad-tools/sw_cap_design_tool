@@ -3,6 +3,7 @@ from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 import copy
 import warnings
+import itertools
 
 
 def fibfun(n):
@@ -842,7 +843,7 @@ def plot_regulation(
     return ax
 
 
-def cascade_topologies(topology1, topology2):
+def cascade_topologies(top_in):
     """
     Returns a new topology consisting of series connection of the two input topologies
 
@@ -850,6 +851,9 @@ def cascade_topologies(topology1, topology2):
     :param topology2: Second topology (connected to output)
     :return: New object of the cascaded topology
     """
+
+    topology1 = top_in[0]
+    topology2 = top_in[1]
     casc_top = copy.deepcopy(topology1)
 
     ratio1 = topology1.ratio
@@ -863,8 +867,8 @@ def cascade_topologies(topology1, topology2):
     casc_top.vr = np.hstack([topology1.vr, topology2.vr * ratio1])
     casc_top.vrb = np.hstack([topology1.vrb, topology2.vrb * ratio1])
     casc_top.ratio = ratio1 * ratio2
-    casc_top.mssl = 2 * casc_top.ratio ** 2 / (np.sum(casc_top.ac * casc_top.vc)) ** 2
-    casc_top.mfsl = casc_top.ratio ** 2 / (2 * np.sum(casc_top.ar * casc_top.vr)) ** 2
+    casc_top.Mssl = 2 * casc_top.ratio ** 2 / (np.sum(casc_top.ac * casc_top.vc)) ** 2
+    casc_top.Mfsl = casc_top.ratio ** 2 / (2 * np.sum(casc_top.ar * casc_top.vr)) ** 2
 
     return casc_top
 
@@ -879,16 +883,8 @@ def permute_topologies(topologies1, topologies2):
     :param topologies2: Second list of topologies
     :return: list of topology permutations
     """
-    newtops = []
 
-    for m in range(len(topologies1)):
-        for n in range(len(topologies2)):
-            top1 = topologies1[m]
-            top2 = topologies2[n]
-
-            newtops.append(cascade_topologies(top1, top2))
-
-    return newtops
+    return list(map(cascade_topologies, itertools.product(topologies1, topologies2)))
 
 
 if __name__ == "__main__":
@@ -946,5 +942,7 @@ if __name__ == "__main__":
 
     Vin = np.linspace(1, 5, 1000).reshape((1, 1000))
     plot_regulation(topologies, Vin, 1.2, 100e-3, 1e-6, [ITRS16sw], [ITRS16cap])
+
+    perm_topols = permute_topologies(topologies, topologies)
 
     plt.show()
