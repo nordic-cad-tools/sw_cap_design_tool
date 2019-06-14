@@ -40,7 +40,7 @@ hv_cap = Capacitor(
 )
 
 
-vin = np.linspace(1, 5, 1000).reshape((1, 1000))
+vin = np.linspace(1, 5, 1000)
 plot_regulation(topologies, vin, 1.2, 100e-3, 1e-6, [hv_switch], [hv_cap])
 
 plt.show()
