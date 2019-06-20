@@ -8,7 +8,12 @@ The orignal matlab code can be found at [Mike Seeman's website](http://www.mikes
 ## Install with pip
 
 ```
-pip git+https://github.com/nordic-cad-tools/sw_cap_design_tool.git
+pip install git+https://github.com/nordic-cad-tools/sw_cap_design_tool.git
+```
+ or
+ 
+ ```
+pip install git+https://github.com/nordic-cad-tools/sw_cap_design_tool.git@v0.0.1
 ```
 
 ## Checking syntax with Black
