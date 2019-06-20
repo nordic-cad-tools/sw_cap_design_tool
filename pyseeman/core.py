@@ -802,7 +802,7 @@ def plot_regulation(
         [opt_perf, fsw_opt, asw_opt] = imp.optimize_loss(iout, area_cap)
         p = imp.evaluate_loss(vin, vout, iout, [], asw_opt, area_cap)
         eff = 100 * p["efficiency"] * p["is_possible"]
-        #eff[eff == 0] = "nan"  # or use np.nan
+        # eff[eff == 0] = "nan"  # or use np.nan
         eff_max = np.nanmax(eff)
         x_eff_max = np.nanargmax(eff)
         if mode == 1:
