@@ -138,7 +138,7 @@ class Topology:
                 ar = np.ones(4)
                 vrb = np.array([0, 1, 0, 1])
             else:
-                vr = np.hstack([np.ones(5), 2 * np.ones(N - 2), 2])
+                vr = np.hstack([np.ones(5), 2 * np.ones(N - 2), 1])
                 ar = np.hstack(
                     [
                         np.ones(2) * np.floor((j + 1) / 2.0),
