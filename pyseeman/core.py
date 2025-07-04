@@ -244,7 +244,7 @@ class Topology:
             vr = np.array([])
             vrb = np.array([0])
 
-            for j in range(2, i):
+            for j in range(2, i-1):
                 ar = np.append(np.array([fibfun(j+1), fibfun(j), fibfun(j)]), ar)
                 vr = np.append(vr, np.array([fibfun(j+1), fibfun(j+1), fibfun(j)]))
                 vrb = np.append(vrb, np.array([fibfun(j), 0, fibfun(j)]))
