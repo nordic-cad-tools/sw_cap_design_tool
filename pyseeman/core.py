@@ -235,21 +235,21 @@ class Topology:
             vc = np.array([])
             vcb = np.array([])
 
-            for j in range(2, i):
-                ac = np.append(fibfun(j - 1), ac)
-                vc = np.append(vc, fibfun(j - 1))
-                vcb = np.append(vcb, fibfun(j - 1))
+            for j in range(2, i-1):
+                ac = np.append(fibfun(j), ac)
+                vc = np.append(vc, fibfun(j + 1))
+                vcb = np.append(vcb, fibfun(j))
 
             ar = np.array([1])
             vr = np.array([])
             vrb = np.array([0])
 
             for j in range(2, i):
-                ar = np.append(np.array([fibfun(j), fibfun(j - 1), fibfun(j - 1)]), ar)
-                vr = np.append(vr, np.array([fibfun(j), fibfun(j), fibfun(j - 1)]))
-                vrb = np.append(vrb, np.array([fibfun(j - 1), 0, fibfun(j - 1)]))
+                ar = np.append(np.array([fibfun(j+1), fibfun(j), fibfun(j)]), ar)
+                vr = np.append(vr, np.array([fibfun(j+1), fibfun(j+1), fibfun(j)]))
+                vrb = np.append(vrb, np.array([fibfun(j), 0, fibfun(j)]))
 
-            vr = np.append(vr, fibfun(i - 1))
+            vr = np.append(vr, fibfun(i - 2))
         else:
             raise ValueError("Topology type not implemented yet")
 
